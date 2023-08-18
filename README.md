@@ -117,3 +117,9 @@ Level 31 = 12
 
 # APK-Info Changelog
 [Changelog](Documents/Changelog.txt)
+
+## More info about country code
+https://www.autoitscript.com/autoit3/docs/appendix/OSLangCodes.htm
+
+## More info about SDK levels
+https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels
