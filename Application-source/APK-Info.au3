@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.36.0.0
+#AutoIt3Wrapper_Res_Fileversion=1.36.1.0
 #AutoIt3Wrapper_Res_LegalCopyright=zoster
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #pragma compile(AutoItExecuteAllowed True)
