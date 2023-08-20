@@ -74,7 +74,6 @@ Global $bCurlInPath = False
 Global $bAPKSignerInPath = False
 Global $b7zInPath = False
 Global $bAaptInPath = False
-Global $bDWebpInPath = False
 Global $bMagickInPath = False
 
 If RunWait('WHERE /Q adb.exe', @WindowsDir, @SW_HIDE) == 0 Then
@@ -1788,10 +1787,10 @@ Func _drawImg($path)
 	If StringRight($filename, 5) == '.webp' Then
 		$tmpFilename = StringTrimRight($filename, 5) & '.png'
 		DirCreate($tempPath)
-		If $bDWebpInPath Then
-			_RunWait('dwebp', 'dwebp "' & $filename & '" -o "' & $tmpFilename & '"')
+		If $bMagickInPath Then
+			_RunWait('magick', 'magick "' & $filename & '" "' & $tmpFilename & '"')
 		Else
-			_RunWait('dwebp', '"' & $toolsDir & 'dwebp" "' & $filename & '" -o "' & $tmpFilename & '"')
+			_RunWait('magick', '"' & $toolsDir & 'convert" "' & $filename & '" "' & $tmpFilename & '"')
 		EndIf
 		If FileExists($tmpFilename) Then
 			FileDelete($filename) ; no need - try delete
