@@ -68,6 +68,42 @@ Global $bSDKMaxAlreadyParsed = False
 Global $bSDKTargetAlreadyParsed = False
 Global $bPackageAlreadyParsed = False
 Global $sAPKSTempPath = ''
+Global $bIconNotInside = False
+Global $bADBInPath = False
+Global $bCurlInPath = False
+Global $bAPKSignerInPath = False
+Global $b7zInPath = False
+Global $bAaptInPath = False
+Global $bDWebpInPath = False
+Global $bMagickInPath = False
+
+If RunWait('WHERE /Q adb.exe', @WindowsDir, @SW_HIDE) == 0 Then
+	$bADBInPath = True
+EndIf
+
+If RunWait('WHERE /Q curl.exe', @WindowsDir, @SW_HIDE) == 0 Then
+	$bCurlInPath = True
+EndIf
+
+If RunWait('WHERE /Q apksigner.bat', @WindowsDir, @SW_HIDE) == 0 Then
+	$bAPKSignerInPath = True
+EndIf
+
+If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
+	$b7zInPath = True
+EndIf
+
+If RunWait('WHERE /Q aapt.exe', @WindowsDir, @SW_HIDE) == 0 Then
+	$bAaptInPath = True
+EndIf
+
+If RunWait('WHERE /Q dwebp.exe', @WindowsDir, @SW_HIDE) == 0 Then
+	$bDWebpInPath = True
+EndIf
+
+If RunWait('WHERE /Q magick.exe', @WindowsDir, @SW_HIDE) == 0 Then
+	$bMagickInPath = True
+EndIf
 
 If FileExists($Inidir & "user.ini") Then
 	FileMove($IniDir & "user.ini", $IniDir & "last_state.ini")
@@ -692,7 +728,7 @@ Func MY_WM_PAINT($hWnd, $Msg, $wParam, $lParam)
 		$defBkColor = BitOR($defBkColor, 0xFF000000)
 	EndIf
 	$color = $defBkColor
-	If $bkgColor <> 0 Then $color = $bkgColor
+	If $bkgColor <> 0 Then $color = "0x" & $bkgColor
 	$hBrush = _GDIPlus_BrushCreateSolid($color)
 	_GDIPlus_GraphicsFillRect($hGraphic, $pos[0], $pos[1], $pos[2], $pos[3], $hBrush)
 	_GDIPlus_BrushDispose($hBrush)
@@ -823,7 +859,6 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 			$sAPKSTempPath = $tempPath & '\' & StringRegExpReplace(_SplitPath($prmFilename, False), '(?i)\.apks$', "")
 			If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
 				If RunWait('7z e -o"' & $tempPath & '\*' & '" -y "' & $prmFilename & '"', "", @SW_HIDE) <> 0 Then
-					;TODO: Add localization
 					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
 					Exit 0
 				EndIf
@@ -854,15 +889,12 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 			$sAPKSTempPath = $tempPath & '\' & StringRegExpReplace(_SplitPath($f_Sel, False), '(?i)\.apks$', "")
 			If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
 				If RunWait('7z e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
-					;TODO: Add localization
 					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
 					Exit 0
 				EndIf
-			Else
-				If RunWait('"' & @ScriptDir & '\tools\7z.exe" e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
-					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
-					Exit 0
-				EndIf
+			ElseIf RunWait('"' & @ScriptDir & '\tools\7z.exe" e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
+				MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
+				Exit 0
 			EndIf
 		EndIf
 		Return $f_Sel
@@ -887,6 +919,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	$bSDKTargetAlreadyParsed = False
 	$bPackageAlreadyParsed = False
 	$sAPKSTempPath = ''
+	$bIconNotInside = False
 	_ArrayDelete($aAPKSContent, "0-" & UBound($aAPKSContent) - 1)
 	;End Reset values
 	$apk = _checkFileParameter($apk, $bProgramStart)
@@ -897,7 +930,6 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	If $bIsAPKS Then
 		$aAPKSContent = _FileListToArray($sAPKSTempPath, "*.apk", $FLTA_FILES, True)
 		If @error Then
-			;TODO: Add localization
 			MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strGettingContentAPKSError)
 			Exit 1
 		EndIf
@@ -911,15 +943,6 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 
 	ProgressSet(0, $fileAPK, $strSignature & '...')
 
-	$processSignature = False
-	If $CheckSignature == 1 Then
-		If $bIsAPKS Then
-			$processSignature = _Run('apksigner', '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar" verify --v --print-certs "' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
-		Else
-			$processSignature = _Run('apksigner', '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar" verify --v --print-certs "' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-		EndIf
-	EndIf
-
 	ProgressSet(1, $fileAPK, $strPkg & '...')
 
 	$tmp = _getBadge($fullPathAPK)
@@ -932,7 +955,11 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 
 	ProgressSet(75, $fileAPK, $strSignature & '...')
 
-	_getSignature($fullPathAPK, $CheckSignature, $processSignature)
+	If $bIsAPKS Then
+		_getSignature($sAPKSTempPath & '\base.apk', $CheckSignature)
+	Else
+		_getSignature($fullPathAPK, $CheckSignature)
+	EndIf
 
 	If $bIsAPKS Then
 		$sNewFilenameAPK = _ReplacePlaceholders($FileNamePattern & '.apks')
@@ -1118,6 +1145,16 @@ Func _Run($label, $cmd, $options)
 	Return $process
 EndFunc   ;==>_Run
 
+Func _RunBatch($label, $cmd)
+	ProgressSet(0, $label & '...')
+	If $bIsAPKS Then
+		RunWait($cmd & ' > "' & $sAPKSTempPath & '\apksigner.txt" 2>&1', $ScriptDir, @SW_HIDE)
+	Else
+		RunWait($cmd & ' > "' & $tempPath & '\apksigner.txt" 2>&1', $ScriptDir, @SW_HIDE)
+	EndIf
+	ProgressSet(100, $label & '... OK')
+EndFunc   ;==>_Run
+
 Func _FixCmd($cmd)
 	If StringInStr(@OSVersion, 'WIN_XP') And StringInStr($cmd, '\tools\adb"') Then
 		$cmd = StringReplace($cmd, '\tools\adb"', '\tools\xp\adb"')
@@ -1135,18 +1172,33 @@ EndFunc   ;==>_RunWait
 Func _LoadSignature()
 	If $apk_Signature == '' Then
 		ProgressOn($strLoading & "...", $strSignature)
-		_getSignature($fullPathAPK, 1)
+		If $bIsAPKS Then
+			_getSignature($sAPKSTempPath & '\base.apk', 1)
+		Else
+			_getSignature($fullPathAPK, 1)
+		EndIf
 		ProgressOff()
 		GUICtrlSetData($edtSignature, $apk_Signature)
 	EndIf
 EndFunc   ;==>_LoadSignature
 
-Func _getSignature($prmAPK, $load, $process = False)
+Func _getSignature($prmAPK, $load)
 	$output = ''
 	If $load == 1 Then
-		If $process == False Then $process = _Run('apksigner', '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar" verify --v --print-certs "' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-		$output &= _readAll($process, 'apksigner stdout')
-		$output &= _readAll($process, 'apksigner stderr', False)
+		If $bAPKSignerInPath Then
+			_RunBatch('apksigner', @ComSpec & ' /C apksigner verify --v --print-certs "' & $prmAPK & '"')
+			If $bIsAPKS Then
+				$output = FileRead($sAPKSTempPath & '\apksigner.txt')
+				FileDelete($sAPKSTempPath & '\apksigner.txt')
+			Else
+				$output = FileRead($tempPath & '\apksigner.txt')
+				FileDelete($tempPath & '\apksigner.txt')
+			EndIf
+		Else
+			$process = _Run('apksigner', '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar" verify --v --print-certs "' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			$output &= _readAll($process, 'apksigner stdout')
+			$output &= _readAll($process, 'apksigner stderr', False)
+		EndIf
 
 		If $output == '' Or StringInStr($output, 'java.lang.UnsupportedClassVersionError') Or StringInStr($output, 'Unsupported major.minor version') Then
 			$output = $strNeedJava & @CRLF & @CRLF & $output
@@ -1191,16 +1243,24 @@ Func _getBadge($prmAPK)
 
 	If $bIsAPKS Then
 		For $i = 1 To UBound($aAPKSContent) - 1
-			$foo = _Run('badging', '"' & $toolsDir & 'aapt" d --include-meta-data badging ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			If $bAaptInPath Then
+				$foo = _Run('badging', 'aapt d --include-meta-data badging ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			Else
+				$foo = _Run('badging', '"' & $toolsDir & 'aapt" d --include-meta-data badging ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			EndIf
 			$output &= StringStripWS(_readAll($foo, 'badging'), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
 		Next
 		If $output == '' Then
 			For $i = 1 To UBound($aAPKSContent) - 1
-				$output &= StringStripWS(_readAll($aAPKSContent[$i], 'badging stderr', False), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
+				$output &= StringStripWS(_readAll($foo, 'badging stderr', False), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
 			Next
 		EndIf
 	Else
-		$foo = _Run('badging', '"' & $toolsDir & 'aapt" d --include-meta-data badging ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		If $bAaptInPath Then
+			$foo = _Run('badging', 'aapt d --include-meta-data badging ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		Else
+			$foo = _Run('badging', '"' & $toolsDir & 'aapt" d --include-meta-data badging ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		EndIf
 		$output = StringStripWS(_readAll($foo, 'badging'), $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		If $output == '' Then
 			$output = StringStripWS(_readAll($foo, 'badging stderr', False), $STR_STRIPLEADING + $STR_STRIPTRAILING)
@@ -1383,8 +1443,13 @@ Func _parseLines($lines)
 
 			Case 'supports-screens'
 				If $bIsAPKS Then
-					$apk_Screens &= StringStripWS(StringReplace($value, "'", ""), $STR_STRIPLEADING + $STR_STRIPTRAILING)
-					$apk_Screens &= @CRLF
+					If $apk_Screens <> '' Then
+						If Not StringInStr($apk_Screens, StringReplace($value, "'", "")) Then
+							$apk_Screens &= StringReplace($value, "'", "") & ' '
+						EndIf
+					Else
+						$apk_Screens &= StringReplace($value, "'", "") & ' '
+					EndIf
 				Else
 					$apk_Screens = StringStripWS(StringReplace($value, "'", ""), $STR_STRIPLEADING + $STR_STRIPTRAILING)
 				EndIf
@@ -1466,6 +1531,8 @@ Func _parseLines($lines)
 	$apk_Densities_2 = StringReplace($apk_Densities_2, "65535", "nodpi")
 	$apk_Densities_2 = StringReplace($apk_Densities_2, "-1", "undefineddpi")
 
+	$apk_Screens = StringStripWS($apk_Screens, $STR_STRIPLEADING + $STR_STRIPTRAILING)
+
 	If StringInStr($apk_Densities_2, "ldpi") Then
 		$apk_Densities &= " ldpi"
 	EndIf
@@ -1539,115 +1606,48 @@ Func _parseLines($lines)
 	;$apk_Features = StringReplace(StringReplace(StringLower($apk_Features), "android.hardware.", ""), "android.permission.", "")
 EndFunc   ;==>_parseLines
 
-Func _searchPng($res)
-	$ret = $res
+Func _searchPng($aIcons)
 
 	If Not $searchPngCache Then
-		If $bIsAPKS Then
-			$foo = _Run('list', '"' & $toolsDir & 'unzip" -l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		If $b7zInPath Then
+			If $bIsAPKS Then
+				$foo = _Run('list', '7z l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			Else
+				$foo = _Run('list', '7z l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			EndIf
 		Else
-			$foo = _Run('list', '"' & $toolsDir & 'unzip" -l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			If $bIsAPKS Then
+				$foo = _Run('list', '"' & $toolsDir & '7z" l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			Else
+				$foo = _Run('list', '"' & $toolsDir & '7z" l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			EndIf
 		EndIf
 		$output = _readAll($foo, 'list')
 		$searchPngCache = _StringExplode($output, @CRLF)
 	EndIf
-
-	$start = StringLeft($res, 10) ; 'res/mipmap' or 'res/drawab'
-	$apk_IconName = _lastPart($res, "/")
-	$end = '/' & StringLeft($apk_IconName, StringLen($apk_IconName) - 3) & 'png'
+	$size = 0
 	$bestSize = 0
-	For $line In $searchPngCache
-		$check = _StringBetween($line, $start, $end)
-		If $check <> 0 Then
-			$size = Int(StringStripWS($line, $STR_STRIPLEADING + $STR_STRIPTRAILING))
-			If $size > $bestSize Then
-				$bestSize = $size
-				$ret = $start & $check[0] & $end
-			EndIf
-		EndIf
-	Next
-	Return $ret
-EndFunc   ;==>_searchPng
-
-Func _parseXmlIcon($icon)
-	If $bIsAPKS Then
-		$foo = _Run('xmltree', '"' & $toolsDir & 'aapt" d xmltree ' & '"' & $sAPKSTempPath & '\base.apk' & '" "' & $icon & '"', $STDERR_CHILD + $STDOUT_CHILD)
-	Else
-		$foo = _Run('xmltree', '"' & $toolsDir & 'aapt" d xmltree ' & '"' & $fullPathAPK & '" "' & $icon & '"', $STDERR_CHILD + $STDOUT_CHILD)
-	EndIf
-	$output = _readAll($foo, 'xmltree')
-	$arrayLines = _StringExplode($output, @CRLF)
-
-	$fg = 1
-	Local $ids[2]
-	$ids[0] = 0
-	$ids[1] = 0
-	For $line In $arrayLines
-		Select
-			Case StringInStr($line, 'E: background')
-				$fg = 0
-
-			Case StringInStr($line, 'E: foreground')
-				$fg = 1
-
-			Case StringInStr($line, 'A: android:drawable')
-				$ids[$fg] = _lastPart($line, "@")
-
-			Case StringInStr($line, 'A: android:src')
-				$ids[$fg] = _lastPart($line, "@")
-		EndSelect
-	Next
-
-	_setProgress(1)
-
-	If $ids[0] Or $ids[1] Then
-		If $bIsAPKS Then
-			$foo = _Run('resources', '"' & $toolsDir & 'aapt" d resources ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
-		Else
-			$foo = _Run('resources', '"' & $toolsDir & 'aapt" d resources ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-		EndIf
-		$output = _readAll($foo, 'resources')
-		$arrayLines = _StringExplode($output, @CRLF)
-
-		Local $png[2]
-		$png[0] = 0
-		$png[1] = 0
-		For $line In $arrayLines
-			If StringInStr($line, 'spec resource ') Then
-				For $i = 0 To 1
-					If Not $ids[$i] Or $png[$i] Or Not StringInStr($line, $ids[$i]) Then ContinueLoop
-					$png[$i] = _StringBetween2($line, ":", ":")
-				Next
-			ElseIf $png[0] And StringLeft($png[0], 6) == 'color/' And StringInStr($line, ':' & $png[0] & ': ') And StringInStr($line, ' d=0x') Then
-				$bkgColor = Dec(_StringBetween2($line, " d=0x", " "))
+	$bestIcon = ''
+	For $icon in $aIcons
+		$icon_png = StringRegExpReplace($icon, '.+/([^/]+)\.(xml|png)$', '$1.png')
+		$icon_webp = StringRegExpReplace($icon, '.+/([^/]+)\.(xml|webp)$', '$1.webp')
+		For $line in $searchPngCache
+			If StringRegExpReplace($line, '^(\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+.+\\([^\\]+)|[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+.+\\([^\\]+))$', '$2$3') == $icon_png Or StringRegExpReplace($line, '^(\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+.+\\([^\\]+)|[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+.+\\([^\\]+))$', '$2$3') == $icon_webp Then
+				$size = Int(StringStripWS(StringRegExpReplace($line, '^(\s+[^\s]+\s+([^\s]+)\s+[^\s]+\s+.+|[^\s]+\s+[^\s]+\s+[^\s]+\s+([^\s]+)\s+[^\s]+\s+.+)$', '$2$3'), $STR_STRIPALL))
+				If $size > $bestSize Then
+					$bestIcon = StringRegExpReplace($line, '^(\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+(.+)|[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+[^\s]+\s+(.+))$', '$2$3')
+					$bestSize = $size
+				EndIf
 			EndIf
 		Next
+	Next
+	Return $bestIcon
+EndFunc   ;==>_searchPng
 
-		If $png[0] Then
-			$apk_IconPathBg = _searchPng('res/' & $png[0] & '.png')
-		EndIf
-		If $png[1] Then
-			$apk_IconPath = _searchPng('res/' & $png[1] & '.png')
-		EndIf
-	EndIf
-	_setProgress(1)
-EndFunc   ;==>_parseXmlIcon
+Func _loadIcon($aIcons)
+	$apk_IconPath = _searchPng($aIcons)
+	_setProgress(4)
 
-Func _loadIcon($icon)
-	$icon = _searchPng($icon)
-
-	_setProgress(1)
-
-	Select
-		Case StringRight($icon, 4) == '.xml'
-			_parseXmlIcon($icon)
-
-		Case Else
-			_setProgress(2)
-			$apk_IconPath = $icon
-	EndSelect
-
-	_setProgress(1)
 EndFunc   ;==>_loadIcon
 
 Func _setProgress($inc)
@@ -1658,33 +1658,77 @@ EndFunc   ;==>_setProgress
 Func _extractIcon()
 	$bkgColor = 0
 	$apk_IconPath = False
-	$apk_IconPathBg = False
 
-	$icons = _StringExplode($apk_Icons, @CRLF)
+	$aIcons = _StringExplode($apk_Icons, @CRLF)
 	$progress = 0
-	$progressMax = UBound($icons) * 4
-	For $icon In $icons
-		If $apk_IconPath And StringRight($apk_IconPath, 4) == '.png' Then ExitLoop
-		_setProgress(0)
+	$progressMax = UBound($aIcons) * 4
 
-		_loadIcon($icon)
-	Next
+	_loadIcon($aIcons)
 	ProgressSet(65, $fileAPK, $strIcon & '...')
 
 	; extract icon
-	$files = $apk_IconPath
-	If $apk_IconPathBg Then
-		$files &= ' ' & $apk_IconPathBg
-	EndIf
-	$files = StringStripWS($files, $STR_STRIPLEADING + $STR_STRIPTRAILING)
-	If $files <> '' Then
-		If $bIsAPKS Then
-			DirCreate($sAPKSTempPath & '\base')
-			_RunWait('icons', '"' & $toolsDir & 'unzip" -o -j ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $files & " -d " & '"' & $sAPKSTempPath & '\base' & '"')
+	If $apk_IconPath <> '' Then
+		If $b7zInPath Then
+			If $bIsAPKS Then
+				_RunWait('icons', '7z e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
+			Else
+				_RunWait('icons', '7z e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
+			EndIf
 		Else
-			DirCreate($tempPath)
-			_RunWait('icons', '"' & $toolsDir & 'unzip" -o -j ' & '"' & $fullPathAPK & '" ' & $files & " -d " & '"' & $tempPath & '"')
+			If $bIsAPKS Then
+				_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
+			Else
+				_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
+			EndIf
 		EndIf
+		
+		If $bMagickInPath Then
+			If $bIsAPKS Then
+				RunWait('magick "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+				FileDelete($sAPKSTempPath & '\magick.txt')
+			Else
+				RunWait('magick "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($tempPath & '\magick.txt')
+				FileDelete($tempPath & '\magick.txt')
+			EndIf
+
+		Else
+			If $bIsAPKS Then
+				RunWait('"' & $toolsDir & '\convert.exe" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+				FileDelete($sAPKSTempPath & '\magick.txt')
+			Else
+				RunWait('"' & $toolsDir & '\convert.exe" "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($tempPath & '\magick.txt')
+				FileDelete($tempPath & '\magick.txt')
+			EndIf
+		EndIf
+
+		$magickOutput = _StringExplode($magickOut, @CRLF)
+		$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
+
+	EndIf
+
+	If $apk_IconPath == '' And $bIsAPKS Then
+		If FileExists($sAPKSTempPath & '\icon.png') Then
+			$apk_IconPath = $sAPKSTempPath & '\icon.png'
+			$bIconNotInside = True
+		EndIf
+
+		If $bMagickInPath Then
+			RunWait('magick "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+			$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+			FileDelete($sAPKSTempPath & '\magick.txt')
+		Else
+			RunWait('"' & $toolsDir & '\convert.exe" "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+			$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+			FileDelete($sAPKSTempPath & '\magick.txt')
+		EndIf
+
+		$magickOutput = _StringExplode($magickOut, @CRLF)
+		$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
+
 	EndIf
 EndFunc   ;==>_extractIcon
 
@@ -1700,7 +1744,13 @@ Func _cleanUp()
 
 	;DirRemove($tempPath, 1) ; clean own dir
 	DirRemove($tempPath, 1) ; clean files from current run
-	If $AdbKill == '2' Then _RunWait('kill', '"' & $toolsDir & 'adb" kill-server')
+	If $AdbKill == '2' Then
+		If $bADBInPath Then
+			_RunWait('kill', 'adb kill-server')
+		Else
+			_RunWait('kill', '"' & $toolsDir & 'adb" kill-server')
+		EndIf
+	EndIf
 EndFunc   ;==>_cleanUp
 
 Func _translateSDKLevel($sdk, $withNumber = True)
@@ -1718,13 +1768,6 @@ Func _translateSDKLevel($sdk, $withNumber = True)
 EndFunc   ;==>_translateSDKLevel
 
 Func _drawPNG()
-	If $hImage_bg Then
-		_GDIPlus_ImageDispose($hImage_bg)
-	EndIf
-	$hImage_bg = 0
-	If $apk_IconPathBg Then
-		$hImage_bg = _drawImg($apk_IconPathBg)
-	EndIf
 	If $hImage Then
 		_GDIPlus_ImageDispose($hImage)
 	EndIf
@@ -1732,16 +1775,24 @@ Func _drawPNG()
 EndFunc   ;==>_drawPNG
 
 Func _drawImg($path)
-	$apk_IconName = _lastPart($path, "/")
+	$apk_IconName = _lastPart($path, "\")
 	If $bIsAPKS Then
-		$filename = $sAPKSTempPath & '\base\' & $apk_IconName
+		If $bIconNotInside Then
+			$filename = $apk_IconPath
+		Else
+			$filename = $sAPKSTempPath & '\base\' & $apk_IconName
+		EndIf
 	Else
 		$filename = $tempPath & "\" & $apk_IconName
 	EndIf
 	If StringRight($filename, 5) == '.webp' Then
 		$tmpFilename = StringTrimRight($filename, 5) & '.png'
 		DirCreate($tempPath)
-		_RunWait('dwebp', '"' & $toolsDir & 'dwebp" "' & $filename & '" -o "' & $tmpFilename & '"')
+		If $bDWebpInPath Then
+			_RunWait('dwebp', 'dwebp "' & $filename & '" -o "' & $tmpFilename & '"')
+		Else
+			_RunWait('dwebp', '"' & $toolsDir & 'dwebp" "' & $filename & '" -o "' & $tmpFilename & '"')
+		EndIf
 		If FileExists($tmpFilename) Then
 			FileDelete($filename) ; no need - try delete
 			$filename = $tmpFilename
@@ -1809,14 +1860,27 @@ EndFunc   ;==>_showText
 
 Func _adbDevice($title)
 	ProgressOn($title, 'ADB')
-	_RunWait('start', '"' & $toolsDir & 'adb" start-server')
+
+	If $bADBInPath Then
+		_RunWait('start', 'adb start-server')
+	Else
+		_RunWait('start', '"' & $toolsDir & 'adb" start-server')
+	EndIf
 
 	For $cmd In _StringExplode($AdbInit, '|')
 		If $cmd == '' Then ContinueLoop
-		_RunWait('init', '"' & $toolsDir & 'adb" ' & $cmd)
+		If $bADBInPath Then
+			_RunWait('init', 'adb ' & $cmd)
+		Else
+			_RunWait('init', '"' & $toolsDir & 'adb" ' & $cmd)
+		EndIf
 	Next
 
-	$foo = _Run('devices', '"' & $toolsDir & 'adb" devices -l', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	If $bADBInPath Then
+		$foo = _Run('devices', 'adb devices -l', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	Else
+		$foo = _Run('devices', '"' & $toolsDir & 'adb" devices -l', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	EndIf
 	$output = _readAll($foo, 'devices')
 
 	$output = StringStripWS(StringReplace($output, 'List of devices attached', ''), $STR_STRIPLEADING + $STR_STRIPTRAILING)
@@ -1860,7 +1924,11 @@ Func _adbDevice($title)
 			$cmd = _StringExplode($cmd, ': ', 1)
 
 			$ids &= GUICtrlCreateButton($cmd[0], $left, $top, $btnWidth, $btnHeight) & @CRLF
-			$commands &= StringReplace($cmd[1], '%adb%', '"' & $toolsDir & 'adb" -s "' & $device & '"') & @CRLF
+			If $bADBInPath Then
+				$commands &= StringReplace($cmd[1], '%adb%', 'adb -s "' & $device & '"') & @CRLF
+			Else
+				$commands &= StringReplace($cmd[1], '%adb%', '"' & $toolsDir & 'adb" -s "' & $device & '"') & @CRLF
+			EndIf
 
 			$left += $btnWidth + $gap
 		Next
@@ -1951,13 +2019,21 @@ Func _adb()
 	$output = ''
 	For $line In $lines
 		If StringInStr($line, '%]') Then ContinueLoop
-		If $output <> '' Then $output &= @CRLF
+		If $output <> '' Then
+			$output &= @CRLF
+		EndIf
 		$output &= $line
 	Next
 
 	MsgBox(0, $title, $output)
 
-	If $AdbKill == '1' Then _RunWait('kill', '"' & $toolsDir & 'adb" kill-server')
+	If $AdbKill == '1' Then
+		If $bADBInPath Then
+			_RunWait('kill', 'adb kill-server')
+		Else
+			_RunWait('kill', '"' & $toolsDir & 'adb" kill-server')
+		EndIf
+	EndIf
 EndFunc   ;==>_adb
 
 Func _readAll($process, $error, $stdout = True)
@@ -2004,7 +2080,11 @@ Func _checkNewVersion()
 		If $CheckNewVersion == '3' Then $now = 'm' & @MON
 		If $tag[0] <> $now Or UBound($tag) <> 2 Then
 			ProgressSet(10, $urlUpdate)
-			$foo = _Run('latest', '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+			If $bCurlInPath Then
+				$foo = _Run('latest', 'curl -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+			Else
+				$foo = _Run('latest', '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+			EndIf
 			$output = _readAll($foo, 'latest')
 			ProgressSet(90, '')
 			$url = _StringBetween2($output, "Location: ", @CRLF)
@@ -2054,7 +2134,11 @@ Func _checkUpdate()
 	ProgressOn($strCheckUpdate, $strPlayStore)
 	$out = $strPlayStore & ':' & @CRLF
 	$url1 = $playStoreUrl & $apk_PkgName
-	$foo = _Run($strPlayStore, '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	If $bCurlInPath Then
+		$foo = _Run($strPlayStore, 'curl -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	Else
+		$foo = _Run($strPlayStore, '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	EndIf
 	ProgressSet(20)
 	$output = _readAll($foo, $strPlayStore)
 	ProgressSet(30)
@@ -2106,7 +2190,11 @@ Func _checkUpdate()
 	$out = $out & @CRLF & $strApkPure & ':' & @CRLF
 	ProgressSet(50, '', $strApkPure)
 	$url2 = $apkPureUrl & $apk_PkgName
-	$foo = _Run($strApkPure, '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	If $bCurlInPath Then
+		$foo = _Run($strApkPure, 'curl -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	Else
+		$foo = _Run($strApkPure, '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	EndIf
 	ProgressSet(70)
 	$output = _readAll($foo, $strApkPure)
 	ProgressSet(80)
