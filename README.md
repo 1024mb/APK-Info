@@ -1,5 +1,5 @@
 # APK-Info
-APK-Info is a Windows tool to get detailed info about an apk file.
+APK-Info is a Windows tool to get detailed info about an apk or apks file.
 
 The app was originally created by ZoSTeR and posted on [Total Commander Forum](https://www.ghisler.ch/board/viewtopic.php?t=32908)
 
@@ -7,7 +7,7 @@ Then was updated by jazzruby and this is the [original jazzruby thread on XDA](h
 
 Then was updated by bovirus and this is the [reworked thread on XDA](https://forum.xda-developers.com/showthread.php?t=3614970)
 
-![APK-Info](https://github.com/Enyby/APK-Info/blob/master/screenshot.png?raw=true "APK-Info")
+![APK-Info](https://github.com/1024mb/APK-Info/blob/master/screenshot.png?raw=true "APK-Info")
 
 Allows you to view:
 - application icon
@@ -33,7 +33,7 @@ The language is selected automatically based on the language of the operating sy
 
 The app allows you to go to Google Play, a custom store (APKPure by default) and VirusTotal.
 
-You can rename an APK file using a pre-defined pattern with substitutions.
+You can rename an APK/APKS file using a pre-defined pattern with substitutions.
 
 You can also install or remove this APK file on a device or emulator connected via ADB.
 
@@ -55,27 +55,28 @@ The application doesn't contain any viruses. See [#4](https://github.com/Enyby/A
 - Option in configuration file to define pattern for renaming filename
 - Windows shell integration (optional)
 - Support Drag'n'Drop APK to the program window
+- Support APKS files
 
 # Using
-You can open the APK file in APK-Info using one of the following methods:
+You can open the APK and APKS file in APK-Info using one of the following methods:
 - Start APK-Info, and then select the APK file in the dialog.
-- Open the APK file by clicking on the open button in the dialog.
-- Drag the APK file to APK-Info.exe or its shortcut.
-- Drag the APK file into the running APK-Info window.
-- Open the APK file by double-clicking, after installing APK-Info, as a program for opening APK files (via explorer or attached .cmd file).
+- Open the APK/APKS file by clicking on the open button in the dialog.
+- Drag the APK/APKS file to APK-Info.exe or its shortcut.
+- Drag the APK/APKS file into the running APK-Info window.
+- Open the APK/APKS file by double-clicking, after installing APK-Info, as a program for opening APK/APKS files (via explorer or attached .cmd file).
 
 # Download
-[Latest releases](https://github.com/Enyby/APK-Info/releases)
+[Latest releases](https://github.com/1024mb/APK-Info/releases)
 
 [Library of old APK-Info versions](https://mega.nz/#F!DNZxjaAb!2Xx8Y_CO6PYwGDnLRgS5_g)
 
 # How to build the latest version
 
-1. Download [the latest release](https://github.com/Enyby/APK-Info/releases/latest).
-2. Download [the source from github](https://github.com/Enyby/APK-Info/archive/master.zip).
+1. Download [the latest release](https://github.com/1024mb/APK-Info/releases/latest).
+2. Download [the source from github](https://github.com/1024mb/APK-Info/archive/master.zip).
 3. Unpack the source on top of the release.
 4. Open the `Application-source\APK-Info.au3` file in the [SciTE4AutoIt3 editor](https://www.autoitscript.com/site/autoit-script-editor/downloads/).
-5. Press F7. The `Apk-Info.exe` file will be updated.
+5. Press F7. The `Apk-Info.exe` and `Apk-Info_x64.exe` files will be updated.
 
 # API Levels supported
 ```
@@ -110,6 +111,9 @@ Level 28 = Pie
 Level 29 = 10
 Level 30 = 11
 Level 31 = 12
+Level 32 = 13
+Level 33 = 14
+Level 35 = 15
 ```
 
 # Additional info
