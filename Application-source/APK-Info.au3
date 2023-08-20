@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.36.2.0
+#AutoIt3Wrapper_Res_Fileversion=1.36.2.1
 #AutoIt3Wrapper_Res_LegalCopyright=zoster
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #pragma compile(AutoItExecuteAllowed True)
@@ -934,7 +934,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 		EndIf
 	EndIf
 
-	WinSetTitle($hGUI, "", $fileAPK & ' - ' & $ProgramTitle & FileGetVersion(@ScriptFullPath))
+	WinSetTitle($hGUI, "", $fileAPK & ' - ' & $ProgramTitle)
 
 	_setFullPathAPK($apk)
 
