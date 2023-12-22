@@ -54,12 +54,12 @@ The application doesn't contain any viruses. See [#4](https://github.com/Enyby/A
 - Option in configuration file to force a specific GUI language
 - Option in configuration file to define pattern for renaming filename
 - Windows shell integration (optional)
-- Support Drag'n'Drop APK to the program window
+- Support Drag'n'Drop APK/APKS to the program window
 - Support APKS files
 
 # Using
 You can open the APK and APKS file in APK-Info using one of the following methods:
-- Start APK-Info, and then select the APK file in the dialog.
+- Start APK-Info, and then select the APK/APKS file in the dialog.
 - Open the APK/APKS file by clicking on the open button in the dialog.
 - Drag the APK/APKS file to APK-Info.exe or its shortcut.
 - Drag the APK/APKS file into the running APK-Info window.
