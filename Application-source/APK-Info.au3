@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.36.2.3
+#AutoIt3Wrapper_Res_Fileversion=1.36.2.13
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_LegalCopyright=zoster
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
@@ -135,6 +135,16 @@ If FileExists($sIniOriginalAppConfig) And IniRead($sIniUserConfig, "Settings", "
 
 EndIf
 
+If FileExists($sIniUserConfig) Then
+	$sOldString = '; CheckNewVersion - Check the new version once a day (1), a week (2), a month (3) or never (0). Default is 1.'
+	$sNewString = '; CheckNewVersion - Check the new version once a day (1), a week (2), a month (3), always (4) or never (0). Default is 1.'
+	If StringInStr(FileRead($sIniUserConfig), $sOldString) Then
+		FileMove($sIniUserConfig, $sIniUserConfig & ".bak")
+		If FileWrite($sIniUserConfig, StringReplace(FileRead($sIniUserConfig & ".bak"), $sOldString, $sNewString)) == 1 Then
+			FileDelete($sIniUserConfig & ".bak")
+		EndIf
+	EndIf
+EndIf
 
 ; $aCmdLine[0] = number of parametrs passed to exe file
 ; $aCmdLine[1] = first parameter (optional) passed to exe file (apk file name)
@@ -146,7 +156,16 @@ Local $aCmdLine = _WinAPI_CommandLineToArgv($CmdLineRaw)
 ;_ArrayDisplay($aCmdLine)
 
 Local $tmp_Filename = ''
-If $aCmdLine[0] > 0 Then $tmp_Filename = $aCmdLine[1]
+If @Compiled == 1 Then
+	If $aCmdLine[0] > 0 Then
+		$tmp_Filename = $aCmdLine[1]
+	EndIf
+Else
+	If $aCmdLine[0] > 1 Then
+		$tmp_Filename = $aCmdLine[2]
+	EndIf
+EndIf
+	
 
 Local $tmp = _StringExplode($tmp_Filename, ':', 2)
 If $tmp[0] == 'debug' Then
@@ -289,7 +308,7 @@ Global $iconProgress = 5
 
 ;================== GUI ===========================
 
-ProgressOn($strLoading & "...", $ProgramName)
+ProgressOn($strLoading & "...", $ProgramName, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 
 If $tmp[0] == 'debug' Then
 	$ProgramTitle = $ProgramName & ' ' & FileGetVersion(@ScriptFullPath) & " (" & $DebugLog & ")"
@@ -523,6 +542,9 @@ If $RestoreGUI <> '0' And $LastWidth And $LastHeight Then
 		WinMove($hGUI, '', $LastLeft, $LastTop)
 	EndIf
 	GUISetState(@SW_SHOW, $hGUI)
+	; The two following lines are included in order to re-gain focus when the user focus other windows while the progress windows are shown, otherwise the main window will not gain focus until the window is manually minimized and maximized
+	GUISetState(@SW_MINIMIZE, $hGUI)
+	GUISetState(@SW_RESTORE, $hGUI)
 	If BitAND($RestoreGUI, 0x2) <> 0 Then
 		If $LastWidth == 1 Then
 			GUISetState(@SW_MAXIMIZE, $hGUI)
@@ -537,6 +559,8 @@ If $RestoreGUI <> '0' And $LastWidth And $LastHeight Then
 	EndIf
 Else
 	GUISetState(@SW_SHOW, $hGUI)
+	GUISetState(@SW_MINIMIZE, $hGUI)
+	GUISetState(@SW_RESTORE, $hGUI)
 EndIf
 
 _OnShow()
@@ -882,7 +906,7 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 				Return Null
 			EndIf
 		EndIf
-		ProgressOn($strLoading & "...", '', _SplitPath($f_Sel, False))
+		ProgressOn($strLoading & "...", '', _SplitPath($f_Sel, False), -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 		$LastFolder = _SplitPath($f_Sel, True)
 		IniWrite($sLastState, "State", "LastFolder", $LastFolder)
 
@@ -892,11 +916,11 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 			If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
 				If RunWait('7z e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
 					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
-					Exit 0
+					Exit 1
 				EndIf
 			ElseIf RunWait('"' & @ScriptDir & '\tools\7z.exe" e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
 				MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
-				Exit 0
+				Exit 1
 			EndIf
 		EndIf
 		Return $f_Sel
@@ -942,7 +966,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 
 	_setFullPathAPK($apk)
 
-	If $progress Then ProgressOn($strLoading & "...", '', $fileAPK)
+	If $progress Then ProgressOn($strLoading & "...", '', $fileAPK, -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 
 	ProgressSet(0, $fileAPK, $strSignature & '...')
 
@@ -1174,7 +1198,7 @@ EndFunc   ;==>_RunWait
 
 Func _LoadSignature()
 	If $apk_Signature == '' Then
-		ProgressOn($strLoading & "...", $strSignature)
+		ProgressOn($strLoading & "...", $strSignature, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 		If $bIsAPKS Then
 			_getSignature($sAPKSTempPath & '\base.apk', 1)
 		Else
@@ -1970,7 +1994,7 @@ Func _showText($title, $message, $text)
 EndFunc   ;==>_showText
 
 Func _adbDevice($title)
-	ProgressOn($title, 'ADB')
+	ProgressOn($title, 'ADB', '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 
 	If $bADBInPath Then
 		_RunWait('start', 'adb start-server')
@@ -2087,7 +2111,7 @@ Func _adb()
 	$parts = _StringExplode($device, '|')
 
 	$title = $parts[0]
-	ProgressOn($title, $strLoading)
+	ProgressOn($title, $strLoading, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 
 	$output = ''
 	$timer = TimerInit()
@@ -2107,7 +2131,7 @@ Func _adb()
 				$timeout = TimerInit()
 
 				$tmp = _StringExplode(StringStripWS($output, $STR_STRIPLEADING + $STR_STRIPTRAILING), @CRLF)
-				ProgressOn($title, $strLoading, $tmp[UBound($tmp) - 1])
+				ProgressOn($title, $strLoading, $tmp[UBound($tmp) - 1], -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 			EndIf
 			$bin = StdoutRead($foo, False, True)
 			If @error Then ExitLoop
@@ -2187,9 +2211,16 @@ Func _checkNewVersion()
 	If $CheckNewVersion <> '0' Then
 		$tag = _StringExplode(IniRead($sLastState, "State", 'LastVersion', ''), '|', 1)
 		$now = 'd' & @MON & '-' & @MDAY ; If $CheckNewVersion == '1' Then
-		If $CheckNewVersion == '2' Then $now = 'w' & Round(@YDAY / 7)
-		If $CheckNewVersion == '3' Then $now = 'm' & @MON
-		If $tag[0] <> $now Or UBound($tag) <> 2 Then
+
+		If $CheckNewVersion == '2' Then
+			$now = 'w' & Round(@YDAY / 7)
+		EndIf
+
+		If $CheckNewVersion == '3' Then
+			$now = 'm' & @MON
+		EndIf
+
+		If $tag[0] <> $now Or UBound($tag) <> 2 Or $CheckNewVersion == '4' Then
 			ProgressSet(10, $urlUpdate)
 			If $bCurlInPath Then
 				$foo = _Run('latest', 'curl -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
@@ -2236,13 +2267,12 @@ Func _checkNewVersion()
 		Else
 			Return False
 		EndIf
-
 	EndIf
 	Return False
 EndFunc   ;==>_checkNewVersion
 
 Func _checkUpdate()
-	ProgressOn($strCheckUpdate, $strPlayStore)
+	ProgressOn($strCheckUpdate, $strPlayStore, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 	$out = $strPlayStore & ':' & @CRLF
 	$url1 = $playStoreUrl & $apk_PkgName
 	If $bCurlInPath Then
