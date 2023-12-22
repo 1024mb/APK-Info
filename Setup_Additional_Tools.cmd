@@ -24,71 +24,81 @@ IF NOT EXIST .\tools MKDIR tools
 IF NOT EXIST .\tools\tmp MKDIR tools\tmp
 
 IF DEFINED ProgramFiles(x86) (
-    GOTO 64_Bits
+	SET "CURL_BIT=win64"
+	SET "MAGICK_BIT=x64"
+	SET "SEVENZIP_BIT=x64\"
 ) ELSE (
-    GOTO 32_Bits
+    SET "CURL_BIT=win32"
+	SET "MAGICK_BIT=x86"
+	SET "SEVENZIP_BIT= "
 )
 
-:64_Bits
-WHERE /Q powershell.exe
-IF %ERRORLEVEL% EQU 0 (
+ECHO.
+ECHO Getting latest 7-zip version
+ECHO.
+powershell -Command "Invoke-WebRequest https://api.github.com/repos/ip7z/7zip/tags -OutFile .\tools\tmp\7zip-tags.json" 
+powershell -Command "$json=Get-Content -Raw -Path '.\tools\tmp\7zip-tags.json' | Out-String | ConvertFrom-Json; foreach ($line in $json) { $line.name > .\tools\tmp\7zip-latest.txt; return }"
 
-	powershell -Command "Invoke-WebRequest https://curl.se/windows/dl-8.2.1_6/curl-8.2.1_6-win64-mingw.zip -OutFile .\tools\tmp\curl-8.2.1_6-win64-mingw.zip"
-	powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7zr.exe -OutFile .\tools\tmp\7zr.exe"
+powershell -Command "$content = (gc .\tools\tmp\7zip-latest.txt).Trim(); [System.IO.File]::WriteAllText('.\tools\tmp\7zip-latest.txt', $content)"
 
-	powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7z2301-extra.7z -OutFile .\tools\tmp\7z2301-extra.7z"
+FOR /F "delims=" %%G IN (.\tools\tmp\7zip-latest.txt) DO SET "SEVENZIP_VERSION=%%G"
 
+powershell -Command "(gc .\tools\tmp\7zip-latest.txt) -replace '\.', '' | Out-File -encoding ASCII .\tools\tmp\7zip-latest.txt"
+powershell -Command "$content = (gc .\tools\tmp\7zip-latest.txt).Trim(); [System.IO.File]::WriteAllText('.\tools\tmp\7zip-latest.txt', $content)"
 
-) ELSE (
-	
-	bitsadmin /transfer "Curl" https://curl.se/windows/dl-8.2.1_6/curl-8.2.1_6-win64-mingw.zip .\tools\tmp\curl-8.2.1_6-win64-mingw.zip
-	bitsadmin /transfer "7-zip" https://www.7-zip.org/a/7zr.exe .\tools\tmp\7zr.exe
-	bitsadmin /transfer "7-zip Extra" https://www.7-zip.org/a/7z2301-extra.7z .\tools\tmp\7z2301-extra.7z
-	
-)
-.\tools\tmp\7zr.exe e .\tools\tmp\7z2301-extra.7z -o.\tools x64\7za.exe -aoa -y
+FOR /F "delims=" %%G IN (.\tools\tmp\7zip-latest.txt) DO SET "SEVENZIP_VERSION_PLAIN=%%G"
+
+DEL /F /Q .\tools\tmp\7zip-tags.json
+DEL /F /Q .\tools\tmp\7zip-latest.txt
+
+ECHO.
+ECHO Downloading 7-zip
+ECHO.
+powershell -Command "Invoke-WebRequest https://github.com/ip7z/7zip/releases/download/%SEVENZIP_VERSION%/7zr.exe -OutFile .\tools\tmp\7zr.exe"
+powershell -Command "Invoke-WebRequest https://github.com/ip7z/7zip/releases/download/%SEVENZIP_VERSION%/7z%SEVENZIP_VERSION_PLAIN%-extra.7z -OutFile .\tools\tmp\7z-extra.7z"
+
+ECHO.
+ECHO Unpacking 7-zip...
+ECHO.
+.\tools\tmp\7zr.exe e .\tools\tmp\7z-extra.7z -o.\tools %SEVENZIP_BIT%7za.exe -aoa -y
 REN .\tools\7za.exe 7z.exe
 DEL /F /Q .\tools\tmp\7zr.exe
-DEL /F /Q .\tools\tmp\7z2301-extra.7z
-.\tools\7z.exe e .\tools\tmp\curl-8.2.1_6-win64-mingw.zip -o.\tools curl.exe curl-ca-bundle.crt -r -aoa -y
-DEL /F /Q .\tools\tmp\curl-8.2.1_6-win64-mingw.zip
-.\tools\curl.exe -o .\tools\tmp\ImageMagick-7.1.1-15-portable-Q16-x64.zip https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-15-portable-Q16-x64.zip
-.\tools\7z.exe e .\tools\tmp\ImageMagick-7.1.1-15-portable-Q16-x64.zip -o.\tools convert.exe colors.xml -r -aoa -y
-DEL /F /Q .\tools\tmp\ImageMagick-7.1.1-15-portable-Q16-x64.zip
-GOTO Universal_Tools
+DEL /F /Q .\tools\tmp\7z-extra.7z
 
-:32_Bits
-WHERE /Q powershell.exe
-IF %ERRORLEVEL% EQU 0 (
-
-	powershell -Command "Invoke-WebRequest https://curl.se/windows/dl-8.2.1_6/curl-8.2.1_6-win32-mingw.zip -OutFile .\tools\tmp\curl-8.2.1_6-win32-mingw.zip"
-	powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7zr.exe -OutFile .\tools\tmp\7zr.exe"
-
-	powershell -Command "Invoke-WebRequest https://www.7-zip.org/a/7z2301-extra.7z -OutFile .\tools\tmp\7z2301-extra.7z"
-
-) ELSE (
-	
-	bitsadmin /transfer "Curl" https://curl.se/windows/dl-8.2.1_6/curl-8.2.1_6-win32-mingw.zip .\tools\tmp\curl-8.2.1_6-win32-mingw.zip
-	bitsadmin /transfer "7-zip" https://www.7-zip.org/a/7zr.exe .\tools\tmp\7zr.exe
-	bitsadmin /transfer "7-zip Extra" https://www.7-zip.org/a/7z2301-extra.7z .\tools\tmp\7z2301-extra.7z
-	
-)
-.\tools\tmp\7zr.exe e .\tools\tmp\7z2301-extra.7z -o.\tools 7za.exe -aoa -y
-REN .\tools\7za.exe 7z.exe
-DEL /F /Q .\tools\tmp\7zr.exe
-DEL /F /Q .\tools\tmp\7z2301-extra.7z
-.\tools\7z.exe e .\tools\tmp\curl-8.2.1_6-win32-mingw.zip -o.\tools curl.exe curl-ca-bundle.crt -r -aoa -y
-DEL /F /Q .\tools\tmp\curl-8.2.1_6-win32-mingw.zip
+ECHO Downloading curl...
 ECHO.
-ECHO Downloading ImageMagick
+powershell -Command "Invoke-WebRequest https://curl.se/windows/latest.cgi?p=%CURL_BIT%-mingw.zip -OutFile .\tools\tmp\curl-%CURL_BIT%-mingw.zip"
+
 ECHO.
-.\tools\curl.exe -o .\tools\tmp\ImageMagick-7.1.1-15-portable-Q16-x86.zip https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-15-portable-Q16-x86.zip
-.\tools\7z.exe e .\tools\tmp\ImageMagick-7.1.1-15-portable-Q16-x86.zip -o.\tools convert.exe colors.xml -r -aoa -y
-DEL /F /Q .\tools\tmp\ImageMagick-7.1.1-15-portable-Q16-x86.zip
-GOTO Universal_Tools
+ECHO Extracting curl...
+ECHO.
+.\tools\7z.exe e .\tools\tmp\curl-%CURL_BIT%-mingw.zip -o.\tools curl.exe curl-ca-bundle.crt -r -aoa -y
+DEL /F /Q .\tools\tmp\curl-%CURL_BIT%-mingw.zip
+
+ECHO.
+ECHO Getting latest magick version
+ECHO.
+powershell -Command "Invoke-WebRequest https://api.github.com/repos/ImageMagick/ImageMagick/tags -OutFile .\tools\tmp\magick-tags.json" 
+powershell -Command "$json=Get-Content -Raw -Path '.\tools\tmp\magick-tags.json' | Out-String | ConvertFrom-Json; foreach ($line in $json) { $line.name > .\tools\tmp\magick-latest.txt; return }"
+
+powershell -Command "$content = (gc .\tools\tmp\magick-latest.txt).Trim(); [System.IO.File]::WriteAllText('.\tools\tmp\magick-latest.txt', $content)"
+
+FOR /F "delims=" %%G IN (.\tools\tmp\magick-latest.txt) DO SET "MAGICK_VERSION=%%G"
+DEL /F /Q .\tools\tmp\magick-tags.json
+DEL /F /Q .\tools\tmp\magick-latest.txt
+
+ECHO.
+ECHO Downloading magick
+ECHO.
+.\tools\curl.exe -L -o .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip https://imagemagick.org/archive/binaries/ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip
+
+ECHO.
+ECHO Extracting magick...
+ECHO.
+.\tools\7z.exe e .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip -o.\tools convert.exe colors.xml -r -aoa -y
+DEL /F /Q .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip
 
 
-:Universal_Tools
 ECHO.
 ECHO Downloading Android platform-tools
 ECHO.
@@ -109,9 +119,9 @@ ECHO.
 ECHO Downloading ADB compatible with WinXP
 ECHO.
 IF NOT EXIST .\tools\xp MKDIR .\tools\xp
-.\tools\curl.exe -o .\tools\xp\adb.exe https://raw.githubusercontent.com/awake558/adb-win/master/SDK_Platform-Tools_for_Windows/platform-tools_r23.1.0-windows/adb.exe
-.\tools\curl.exe -o .\tools\xp\AdbWinApi.dll https://github.com/awake558/adb-win/raw/master/SDK_Platform-Tools_for_Windows/platform-tools_r23.1.0-windows/AdbWinApi.dll
-.\tools\curl.exe -o .\tools\xp\AdbWinUsbApi.dll https://github.com/awake558/adb-win/raw/master/SDK_Platform-Tools_for_Windows/platform-tools_r23.1.0-windows/AdbWinUsbApi.dll
+.\tools\curl.exe -L -o .\tools\xp\adb.exe https://raw.githubusercontent.com/1024mb/adb-win/master/SDK_Platform-Tools_for_Windows/platform-tools_r23.1.0-windows/adb.exe
+.\tools\curl.exe -L -o .\tools\xp\AdbWinApi.dll https://raw.githubusercontent.com/1024mb/adb-win/master/SDK_Platform-Tools_for_Windows/platform-tools_r23.1.0-windows/AdbWinApi.dll
+.\tools\curl.exe -L -o .\tools\xp\AdbWinUsbApi.dll https://raw.githubusercontent.com/1024mb/adb-win/master/SDK_Platform-Tools_for_Windows/platform-tools_r23.1.0-windows/AdbWinUsbApi.dll
 
 RMDIR /S /Q .\tools\tmp
 ECHO.
