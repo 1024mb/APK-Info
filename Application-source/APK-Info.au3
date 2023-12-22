@@ -5,7 +5,8 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.36.2.1
+#AutoIt3Wrapper_Res_Fileversion=1.36.2.3
+#AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_LegalCopyright=zoster
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #pragma compile(AutoItExecuteAllowed True)
@@ -43,6 +44,7 @@ Global $apk_Permissions, $apk_Features, $hGraphic, $hImage, $hImage_bg, $apk_Min
 Global $apk_Screens, $apk_Densities, $apk_ABIs, $apk_Signature, $apk_SignatureName, $apk_Debuggable
 Global $apk_Locales, $apk_OpenGLES, $apk_Textures
 Global $tempPath = @TempDir & "\APK-Info\" & @AutoItPID
+DirCreate($tempPath)
 Global $toolsDir = $ScriptDir & '\tools\'
 Global $Inidir, $ForceGUILanguage
 Global $tmpArrBadge, $dirAPK, $fileAPK, $fullPathAPK
@@ -75,6 +77,7 @@ Global $bAPKSignerInPath = False
 Global $b7zInPath = False
 Global $bAaptInPath = False
 Global $bMagickInPath = False
+Global $bAPKIconBuilt = False
 
 If RunWait('WHERE /Q adb.exe', @WindowsDir, @SW_HIDE) == 0 Then
 	$bADBInPath = True
@@ -882,7 +885,7 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 		ProgressOn($strLoading & "...", '', _SplitPath($f_Sel, False))
 		$LastFolder = _SplitPath($f_Sel, True)
 		IniWrite($sLastState, "State", "LastFolder", $LastFolder)
-		
+
 		If StringRegExp($f_Sel, '(?i)\.apks$') Then
 			$bIsAPKS = True
 			$sAPKSTempPath = $tempPath & '\' & StringRegExpReplace(_SplitPath($f_Sel, False), '(?i)\.apks$', "")
@@ -919,6 +922,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	$bPackageAlreadyParsed = False
 	$sAPKSTempPath = ''
 	$bIconNotInside = False
+	$bAPKIconBuilt = False
 	_ArrayDelete($aAPKSContent, "0-" & UBound($aAPKSContent) - 1)
 	;End Reset values
 	$apk = _checkFileParameter($apk, $bProgramStart)
@@ -1144,12 +1148,12 @@ Func _Run($label, $cmd, $options)
 	Return $process
 EndFunc   ;==>_Run
 
-Func _RunBatch($label, $cmd)
+Func _RunBatch($label, $cmd, $name)
 	ProgressSet(0, $label & '...')
 	If $bIsAPKS Then
-		RunWait($cmd & ' > "' & $sAPKSTempPath & '\apksigner.txt" 2>&1', $ScriptDir, @SW_HIDE)
+		RunWait($cmd & ' > "' & $sAPKSTempPath & '\' & $name & '.txt" 2>&1', $ScriptDir, @SW_HIDE)
 	Else
-		RunWait($cmd & ' > "' & $tempPath & '\apksigner.txt" 2>&1', $ScriptDir, @SW_HIDE)
+		RunWait($cmd & ' > "' & $tempPath & '\' & $name & '.txt" 2>&1', $ScriptDir, @SW_HIDE)
 	EndIf
 	ProgressSet(100, $label & '... OK')
 EndFunc   ;==>_Run
@@ -1185,7 +1189,7 @@ Func _getSignature($prmAPK, $load)
 	$output = ''
 	If $load == 1 Then
 		If $bAPKSignerInPath Then
-			_RunBatch('apksigner', @ComSpec & ' /C apksigner verify --v --print-certs "' & $prmAPK & '"')
+			_RunBatch('apksigner', @ComSpec & ' /C apksigner verify --v --print-certs "' & $prmAPK & '"', "apksigner")
 			If $bIsAPKS Then
 				$output = FileRead($sAPKSTempPath & '\apksigner.txt')
 				FileDelete($sAPKSTempPath & '\apksigner.txt')
@@ -1564,6 +1568,8 @@ Func _parseLines($lines)
 		$apk_Densities = StringStripWS($apk_Densities & ' anydpi', $STR_STRIPLEADING + $STR_STRIPTRAILING)
 	EndIf
 
+	$apk_Densities = StringStripWS($apk_Densities, $STR_STRIPLEADING + $STR_STRIPTRAILING)
+
 	If Not StringInStr($apk_Labels, @CRLF) Then $apk_Labels = ''
 
 	$apk_Icons = ''
@@ -1606,7 +1612,7 @@ Func _parseLines($lines)
 EndFunc   ;==>_parseLines
 
 Func _searchPng($aIcons)
-
+	$foo = ''
 	If Not $searchPngCache Then
 		If $b7zInPath Then
 			If $bIsAPKS Then
@@ -1640,13 +1646,96 @@ Func _searchPng($aIcons)
 			EndIf
 		Next
 	Next
-	Return $bestIcon
+
+	If $bestIcon == '' Then ; if no icon is found we try to build the icon from the available PNG files (background and foreground) if they exist, this doesn't work for all APK files
+		$sApkIconPath = ''
+		If $bIsAPKS Then
+			$sApkIconPath = _buildPng($sAPKSTempPath & '\base.apk')
+		Else
+			$sApkIconPath = _buildPng($fullPathAPK)
+		EndIf
+		Return $sApkIconPath
+	Else
+		Return $bestIcon
+	EndIf
 EndFunc   ;==>_searchPng
+
+Func _buildPng($sPathMainAPK)
+	$sForegroundPngPath = ''
+	$sBackgroundPngPath = ''
+	$sIconPath = ''
+
+	_RunBatch('aapt list', @ComSpec & ' /C aapt l "' & $sPathMainAPK & '"', "aapt-list")
+	If $bIsAPKS Then
+		$sOutputAapt = FileRead($sAPKSTempPath & '\aapt-list.txt')
+		FileDelete($sAPKSTempPath & '\aapt-list.txt')
+	Else
+		$sOutputAapt = FileRead($tempPath & '\aapt-list.txt')
+		FileDelete($tempPath & '\aapt-list.txt')
+	EndIf
+
+	$aOutArray = _StringExplode($sOutputAapt, @CRLF)
+	_ArrayReverse($aOutArray)
+
+	For $line In $aOutArray
+		If StringRegExp($line, "^res\/mipmap-[^\/]+\/.+?_foreground_color_[^\.]+\.(png|webp)$") == 1 Then
+			$sForegroundPngPath = $line
+			ExitLoop
+		EndIf
+	Next
+
+	For $line In $aOutArray
+		If StringRegExp($line, "^res\/mipmap-[^\/]+\/.+?_background_color_[^\.]+\.(png|webp)$") == 1 Then
+			$sBackgroundPngPath = $line
+			ExitLoop
+		EndIf
+	Next
+
+	If $sForegroundPngPath == '' Or $sBackgroundPngPath == '' Then
+		Return ''
+	EndIf
+
+	If $b7zInPath Then
+		If $bIsAPKS Then
+			_RunWait('extracting icons', '7z e "' & $sAPKSTempPath & '\base.apk" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $sAPKSTempPath & '\base" -r -aoa -y')
+		Else
+			_RunWait('extracting icons', '7z e "' & $fullPathAPK & '" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $tempPath & '" -r -aoa -y')
+		EndIf
+	Else
+		If $bIsAPKS Then
+			_RunWait('extracting icons', '"' & $toolsDir & '7z.exe" e "' & $sAPKSTempPath & '\base.apk" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $sAPKSTempPath & '\base" -r -aoa -y')
+		Else
+			_RunWait('extracting icons', '"' & $toolsDir & '7z.exe" e "' & $fullPathAPK & '" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $tempPath & '" -r -aoa -y')
+		EndIf
+	EndIf
+
+	If $bMagickInPath Then
+		If $bIsAPKS Then
+			_RunWait('building icon', 'magick "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $sAPKSTempPath & '\built_icon.png"')
+			$bAPKIconBuilt = True
+			$sIconPath = $sAPKSTempPath & '\built_icon.png'
+		Else
+			_RunWait('building icon', 'magick "' & $tempPath & '\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $tempPath & '\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $tempPath & '\built_icon.png"')
+			$bAPKIconBuilt = True
+			$sIconPath = $tempPath & '\built_icon.png'
+		EndIf
+	Else
+		If $bIsAPKS Then
+			_RunWait('building icon', '"' & $toolsDir & 'convert.exe"' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $sAPKSTempPath & '\built_icon.png"')
+			$bAPKIconBuilt = True
+			$sIconPath = $sAPKSTempPath & '\built_icon.png'
+		Else
+			_RunWait('building icon', '"' & $toolsDir & 'convert.exe"' & $tempPath & '\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $tempPath & '\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $tempPath & '\built_icon.png"')
+			$bAPKIconBuilt = True
+			$sIconPath = $tempPath & '\built_icon.png'
+		EndIf
+	EndIf
+	Return $sIconPath
+EndFunc
 
 Func _loadIcon($aIcons)
 	$apk_IconPath = _searchPng($aIcons)
 	_setProgress(4)
-
 EndFunc   ;==>_loadIcon
 
 Func _setProgress($inc)
@@ -1667,46 +1756,70 @@ Func _extractIcon()
 
 	; extract icon
 	If $apk_IconPath <> '' Then
-		If $b7zInPath Then
-			If $bIsAPKS Then
-				_RunWait('icons', '7z e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
+		If $bAPKIconBuilt Then
+			$magickOut = ''
+			If $bMagickInPath Then
+				If $bIsAPKS Then
+					RunWait('magick "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+					FileDelete($sAPKSTempPath & '\magick.txt')
+				Else
+					RunWait('magick "' & $apk_IconPath & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($tempPath & '\magick.txt')
+					FileDelete($tempPath & '\magick.txt')
+				EndIf
 			Else
-				_RunWait('icons', '7z e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
+				If $bIsAPKS Then
+					RunWait('"' & $toolsDir & '\convert.exe" "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+					FileDelete($sAPKSTempPath & '\magick.txt')
+				Else
+					RunWait('"' & $toolsDir & '\convert.exe" "' & $apk_IconPath & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($tempPath & '\magick.txt')
+					FileDelete($tempPath & '\magick.txt')
+				EndIf
 			EndIf
+			$magickOutput = _StringExplode($magickOut, @CRLF)
+			$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
 		Else
-			If $bIsAPKS Then
-				_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
+			If $b7zInPath Then
+				If $bIsAPKS Then
+					_RunWait('icons', '7z e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
+				Else
+					_RunWait('icons', '7z e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
+				EndIf
 			Else
-				_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
+				If $bIsAPKS Then
+					_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
+				Else
+					_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
+				EndIf
 			EndIf
+
+			If $bMagickInPath Then
+				If $bIsAPKS Then
+					RunWait('magick "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+					FileDelete($sAPKSTempPath & '\magick.txt')
+				Else
+					RunWait('magick "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($tempPath & '\magick.txt')
+					FileDelete($tempPath & '\magick.txt')
+				EndIf
+			Else
+				If $bIsAPKS Then
+					RunWait('"' & $toolsDir & '\convert.exe" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+					FileDelete($sAPKSTempPath & '\magick.txt')
+				Else
+					RunWait('"' & $toolsDir & '\convert.exe" "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+					$magickOut = FileRead($tempPath & '\magick.txt')
+					FileDelete($tempPath & '\magick.txt')
+				EndIf
+			EndIf
+			$magickOutput = _StringExplode($magickOut, @CRLF)
+			$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
 		EndIf
-		
-		If $bMagickInPath Then
-			If $bIsAPKS Then
-				RunWait('magick "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-				$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-				FileDelete($sAPKSTempPath & '\magick.txt')
-			Else
-				RunWait('magick "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
-				$magickOut = FileRead($tempPath & '\magick.txt')
-				FileDelete($tempPath & '\magick.txt')
-			EndIf
-
-		Else
-			If $bIsAPKS Then
-				RunWait('"' & $toolsDir & '\convert.exe" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-				$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-				FileDelete($sAPKSTempPath & '\magick.txt')
-			Else
-				RunWait('"' & $toolsDir & '\convert.exe" "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
-				$magickOut = FileRead($tempPath & '\magick.txt')
-				FileDelete($tempPath & '\magick.txt')
-			EndIf
-		EndIf
-
-		$magickOutput = _StringExplode($magickOut, @CRLF)
-		$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
-
 	EndIf
 
 	If $apk_IconPath == '' And $bIsAPKS Then
@@ -1741,7 +1854,6 @@ Func _cleanUp()
 	_GDIPlus_GraphicsDispose($hGraphic)
 	_GDIPlus_Shutdown()
 
-	;DirRemove($tempPath, 1) ; clean own dir
 	DirRemove($tempPath, 1) ; clean files from current run
 	If $AdbKill == '2' Then
 		If $bADBInPath Then
@@ -2146,7 +2258,7 @@ Func _checkUpdate()
 	If @error == 0 Then
 		$ver = StringStripWS($ver[0], $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		If $ver <> $apk_Version And $ver <> 'Varies with device' Then
-			
+
 			Local $aiOnlineVersion = StringSplit($ver, ".")
 			Local $aiAPKVersion = StringSplit($apk_Version, ".")
 
@@ -2224,7 +2336,7 @@ Func _checkUpdate()
 				$iDiff -= 1
 			WEnd
 		EndIf
-		
+
 		If $iOnlineVersion > $iAPKVersion Then
 			$ver = $ver & '   <--- ' & $strNewVersionIsAvailable
 		ElseIf $iOnlineVersion == $iAPKVersion Then
