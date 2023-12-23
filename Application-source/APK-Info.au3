@@ -1442,7 +1442,6 @@ Func _parseLines($lines)
 
 	$icons = ''
 	$icons2 = ''
-	$banners = ''
 
 	$featuresUsed = ''
 	$featuresNotRequired = ''
@@ -1496,11 +1495,6 @@ Func _parseLines($lines)
 				If $icon <> '' Then
 					If $icons <> '' Then $icons &= @CRLF
 					$icons &= $icon
-				EndIf
-				$icon = _StringBetween2($value, "banner='", "'")
-				If $icon <> '' Then
-					If $banners <> '' Then $banners &= @CRLF
-					$banners &= $icon
 				EndIf
 
 				If $featuresOthers <> '' Then $featuresOthers &= @CRLF
@@ -1718,8 +1712,7 @@ Func _parseLines($lines)
 	$apk_Icons = ''
 	Local $src[3]
 	$src[0] = $icons
-	$src[1] = $banners
-	$src[2] = $icons2
+	$src[1] = $icons2
 	For $list In $src
 		$list = StringStripWS($list, $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		If $list == '' Then ContinueLoop
