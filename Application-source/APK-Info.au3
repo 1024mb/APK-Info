@@ -553,9 +553,6 @@ If $RestoreGUI <> '0' And $LastWidth And $LastHeight Then
 		WinMove($hGUI, '', $LastLeft, $LastTop)
 	EndIf
 	GUISetState(@SW_SHOW, $hGUI)
-	; The two following lines are included in order to re-gain focus when the user focus other windows while the progress windows are shown, otherwise the main window will not gain focus until the window is manually minimized and maximized
-	GUISetState(@SW_MINIMIZE, $hGUI)
-	GUISetState(@SW_RESTORE, $hGUI)
 	If BitAND($RestoreGUI, 0x2) <> 0 Then
 		If $LastWidth == 1 Then
 			GUISetState(@SW_MAXIMIZE, $hGUI)
@@ -570,14 +567,17 @@ If $RestoreGUI <> '0' And $LastWidth And $LastHeight Then
 	EndIf
 Else
 	GUISetState(@SW_SHOW, $hGUI)
-	GUISetState(@SW_MINIMIZE, $hGUI)
-	GUISetState(@SW_RESTORE, $hGUI)
 EndIf
 
 _OnShow()
 _saveGUIPos()
 
 ProgressOff()
+
+; The following lines are included in order to re-gain focus when the user focus other windows while the progress windows are shown, otherwise the main window will not gain focus until the window is manually minimized and maximized
+GUISetState(@SW_MINIMIZE, $hGUI)
+GUISetState(@SW_RESTORE, $hGUI)
+WinActivate($hGUI)
 
 Local $whGap = '            '
 
