@@ -1060,6 +1060,8 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 		If StringLen($keepWordsEncloseChars) == 2 Then
 			$sEncloseCharStart = StringRegExpReplace($keepWordsEncloseChars, "^(.).$", "$1")
 			$sEncloseCharEnd = StringRegExpReplace($keepWordsEncloseChars, "^.(.)$", "$1")
+		Else
+			showErrorMsg("KeepWordsEncloseChars")
 		EndIf
 
 		If $keepWordsMatchStart == 1 Then
@@ -1082,7 +1084,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 					Else
 						showErrorMsg("KeepWordsRecase")
 					EndIf
-					$fileAPKAlt = StringReplace($fileAPKAlt, $sWord, "")
+					$fileAPKAlt = StringReplace($fileAPKAlt, StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), "")
 				EndIf
 			Next
 			If $sMatchedWords <> "" Then
@@ -1112,7 +1114,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 					Else
 						showErrorMsg("KeepWordsRecase")
 					EndIf
-					$fileAPKAlt = StringReplace($fileAPKAlt, $sWord, "")
+					$fileAPKAlt = StringReplace($fileAPKAlt, StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), "")
 				EndIf
 			Next
 		Else
