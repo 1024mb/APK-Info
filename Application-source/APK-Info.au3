@@ -216,6 +216,8 @@ If $keepWords == 1 Then
 	$keepWordsRecase = _readSettings("KeepWordsRecase", "0")
 EndIf
 
+$renameWithoutPrompt = _readSettings("RenameWithoutPrompt", "0")
+
 Local $space = 'space'
 $FileNameSpace = _readSettings("FileNameSpace", $space)
 If $FileNameSpace == $space Then $FileNameSpace = ' '
@@ -641,9 +643,17 @@ While 1
 					_renameAPK($sNewFilenameAPK)
 				EndIf
 			Else
-				$sNewNameInput = _promptRename($strRenameAPK, $strNewName, $sNewFilenameAPK)
-				If $fileAPK <> $sNewNameInput And $sNewNameInput <> "" Then
-					_renameAPK($sNewNameInput)
+				If $renameWithoutPrompt == 1 Then
+					If $fileAPK <> $sNewFilenameAPK And $sNewFilenameAPK <> "" Then
+						_renameAPK($sNewFilenameAPK)
+					EndIf
+				ElseIf $renameWithoutPrompt == 0 Then
+					$sNewNameInput = _promptRename($strRenameAPK, $strNewName, $sNewFilenameAPK)
+					If $fileAPK <> $sNewNameInput And $sNewNameInput <> "" Then
+						_renameAPK($sNewNameInput)
+					EndIf
+				Else
+					showErrorMsg("RenameWithoutPrompt")
 				EndIf
 			EndIf
 
