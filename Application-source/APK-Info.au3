@@ -5,9 +5,8 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.36.2.13
-#AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
-#AutoIt3Wrapper_Res_LegalCopyright=zoster
+#AutoIt3Wrapper_Res_Fileversion=1.36.3
+#AutoIt3Wrapper_Res_LegalCopyright=NONE
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #pragma compile(AutoItExecuteAllowed True)
 
@@ -207,6 +206,14 @@ $RestoreGUI = _readSettings("RestoreGUI", '0')
 $OldVirusTotal = _readSettings("OldVirusTotal", '0')
 $CheckNewVersion = _readSettings("CheckNewVersion", '1')
 $ShowLangCode = _readSettings("ShowLangCode", "1")
+$keepWords = _readSettings("KeepWords", "0")
+If $keepWords == 1 Then
+	$keepWordsList = _readSettings("KeepWordsList", "")
+	$keepWordsEncloseChars = _readSettings("KeepWordsEncloseChars", "")
+	$keepWordsCombine = _readSettings("KeepWordsCombine", "1")
+	$keepWordsMatchStart = _readSettings("KeepWordsMatchStart", "0")
+	$keepWordsRecase = _readSettings("KeepWordsRecase", "0")
+EndIf
 
 Local $space = 'space'
 $FileNameSpace = _readSettings("FileNameSpace", $space)
@@ -277,6 +284,7 @@ $strErrorTitle = IniRead($sIniLocalization, $LangSection, "ErrorTitle", 'Error')
 $strExtractAPKSError = IniRead($sIniLocalization, $LangSection, "ExtractAPKSError", 'There was an error extracting the APKS file')
 $strGettingContentAPKSError = IniRead($sIniLocalization, $LangSection, "GettingContentAPKSError", 'There was an error getting the contents of the APKS file')
 $strRenFileAlreadyExistsMsg = IniRead($sIniLocalization, $LangSection, "RenFileAlreadyExistsMsg", 'The output file already exists, please enter a new name')
+$strUknownValueMsg = IniRead($sIniLocalization, $LangSection, "UknownValueMsg", 'The specified value for the following option is invalid:')
 
 $strUses = IniRead($sIniLocalization, $LangSection, "Uses", "uses")
 $strImplied = IniRead($sIniLocalization, $LangSection, "Implied", "implied")
@@ -1004,6 +1012,86 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, ">", $FileNameSpace)
 	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "|", $FileNameSpace)
 	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, $nbsp, $FileNameSpace)
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, $FileNameSpace & "()", "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, $FileNameSpace & "{}", "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, $FileNameSpace & "[]", "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "()" & $FileNameSpace, "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "{}" & $FileNameSpace, "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "[]" & $FileNameSpace, "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "()", "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "{}", "")
+	$sNewFilenameAPK = StringReplace($sNewFilenameAPK, "[]", "")
+
+	If $keepWords == 1 Then
+		$fileAPKAlt = $fileAPK
+
+		$aKeepWordsList = _StringExplode($keepWordsList, ",")
+		$sEncloseCharStart = ""
+		$sEncloseCharEnd = ""
+		If StringLen($keepWordsEncloseChars) == 2 Then
+			$sEncloseCharStart = StringRegExpReplace($keepWordsEncloseChars, "^(.).$", "$1")
+			$sEncloseCharEnd = StringRegExpReplace($keepWordsEncloseChars, "^.(.)$", "$1")
+		EndIf
+
+		If $keepWordsMatchStart == 1 Then
+			$keepWordsRegEx = "(^|[^A-Za-zÁ-Úá-úÑñ])"
+		ElseIf $keepWordsMatchStart == 0 Then
+			$keepWordsRegEx = "([^A-Za-zÁ-Úá-úÑñ])"
+		Else
+			showErrorMsg("KeepWordsMatchStart")
+		EndIf
+
+		If $keepWordsCombine == 1 Then
+			$sMatchedWords = ""
+			For $sWord In $aKeepWordsList
+				If StringRegExp($fileAPKAlt, "(?i)" & $keepWordsRegEx & StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "([^A-Za-zÁ-Úá-úÑñ]|$)") Then
+					If $keepWordsRecase == 1 Then
+						$sRecasedWord = StringUpper(StringLeft(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), 1)) & StringRight(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), StringLen(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING)) - 1)
+						$sMatchedWords &= _FixSpaces($sRecasedWord) & ","
+					ElseIf $keepWordsRecase == 0 Then
+						$sMatchedWords &= _FixSpaces(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING)) & ","
+					Else
+						showErrorMsg("KeepWordsRecase")
+					EndIf
+					$fileAPKAlt = StringReplace($fileAPKAlt, $sWord, "")
+				EndIf
+			Next
+			If $sMatchedWords <> "" Then
+				$sMatchedWords = StringRegExpReplace($sMatchedWords, ",$", "")
+				If $bIsAPKS Then
+					$sNewFilenameAPK = StringRegExpReplace($sNewFilenameAPK, "\.apks$", "") & $FileNameSpace & $sEncloseCharStart & _FixSpaces($sMatchedWords) & $sEncloseCharEnd & ".apks"
+				Else
+					$sNewFilenameAPK = StringRegExpReplace($sNewFilenameAPK, "\.apk$", "") & $FileNameSpace & $sEncloseCharStart & _FixSpaces($sMatchedWords) & $sEncloseCharEnd & ".apk"
+				EndIf
+			EndIf
+		ElseIf $keepWordsCombine == 0 Then
+			For $sWord In $aKeepWordsList
+				If StringRegExp($fileAPKAlt, "(?i)" & $keepWordsRegEx & StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "([^A-Za-zÁ-Úá-úÑñ]|$)") Then
+					If $keepWordsRecase == 1 Then
+						$sRecasedWord = StringUpper(StringLeft(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), 1)) & StringRight(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), StringLen(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING)) - 1)
+						IF $bIsAPKS Then
+							$sNewFilenameAPK = StringRegExpReplace($sNewFilenameAPK, "\.apks$", "") & $FileNameSpace & $sEncloseCharStart & _FixSpaces($sRecasedWord) & $sEncloseCharEnd & ".apks"
+						Else
+							$sNewFilenameAPK = StringRegExpReplace($sNewFilenameAPK, "\.apk$", "") & $FileNameSpace & $sEncloseCharStart & _FixSpaces($sRecasedWord) & $sEncloseCharEnd & ".apk"
+						EndIf
+					ElseIf $keepWordsRecase == 0 Then
+						IF $bIsAPKS Then
+							$sNewFilenameAPK = StringRegExpReplace($sNewFilenameAPK, "\.apks$", "") & $FileNameSpace & $sEncloseCharStart & _FixSpaces(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING)) & $sEncloseCharEnd & ".apks"
+						Else
+							$sNewFilenameAPK = StringRegExpReplace($sNewFilenameAPK, "\.apk$", "") & $FileNameSpace & $sEncloseCharStart & _FixSpaces(StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING)) & $sEncloseCharEnd & ".apk"
+						EndIf
+					Else
+						showErrorMsg("KeepWordsRecase")
+					EndIf
+					$fileAPKAlt = StringReplace($fileAPKAlt, $sWord, "")
+				EndIf
+			Next
+		Else
+			showErrorMsg("KeepWordsCombine")
+		EndIf
+	ElseIf $keepWords <> 0 Then
+		showErrorMsg("KeepWords")
+	EndIf
 
 	$hash = _ReplacePlaceholders($ShowHash)
 
@@ -1705,11 +1793,17 @@ Func _buildPng($sPathMainAPK)
 		If StringRegExp($line, "^res\/mipmap-[^\/]+\/.+?_foreground_color_[^\.]+\.(png|webp)$") == 1 Then
 			$sForegroundPngPath = $line
 			ExitLoop
+		ElseIf StringRegExp($line, "^res\/mipmap-[^\/]+\/icon_android_fg\.(png|webp)$") == 1 Then
+			$sForegroundPngPath = $line
+			ExitLoop
 		EndIf
 	Next
 
 	For $line In $aOutArray
 		If StringRegExp($line, "^res\/mipmap-[^\/]+\/.+?_background_color_[^\.]+\.(png|webp)$") == 1 Then
+			$sBackgroundPngPath = $line
+			ExitLoop
+		ElseIf StringRegExp($line, "^res\/mipmap-[^\/]+\/icon_android_bg\.(png|webp)$") == 1 Then
 			$sBackgroundPngPath = $line
 			ExitLoop
 		EndIf
@@ -1755,7 +1849,7 @@ Func _buildPng($sPathMainAPK)
 		EndIf
 	EndIf
 	Return $sIconPath
-EndFunc
+EndFunc   ;==>_buildPng
 
 Func _loadIcon($aIcons)
 	$apk_IconPath = _searchPng($aIcons)
@@ -2400,3 +2494,7 @@ Func _Lib_IntToFloat($iInt)
 	DllStructSetData($tInt, 1, $iInt)
 	Return DllStructGetData($tFloat, 1)
 EndFunc   ;==>_Lib_IntToFloat
+
+Func showErrorMsg($sConfigOptionLabel)
+	MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strUknownValueMsg & @CRLF & @CRLF & $sConfigOptionLabel)
+EndFunc   ;==>showErrorMsg
