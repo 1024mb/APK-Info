@@ -1,3 +1,33 @@
+*** 1.36.3
+
+- Improved batch files for shell integration.
+- Custom stores icons added.
+- Split configuration file into multiple files.
+- Spanish (es-419) translation added.
+- Spanish (es) translation slightly improved.
+- Added newer SDKs.
+- Added some new strings.
+- Improved package version comparison.
+- Fixed APKPure Not Found detection.
+- Use icon for custom store button.
+- Removed redundant release date variable.
+- Improved application version check.
+- Added support for APKS files.
+- New dependency: 7-zip, replacing unzip.
+- New dependency: Imagemagick, replacing dwebp.
+- Don't error when filename is unchanged in rename operation.
+- Ask for new name when the (new) file(name) already exists.
+- Don't exit if File Open dialog is canceled and a file has already been loaded.
+- Check if tools are available in PATH and prefer them.
+- Reworked icon and background color retrieval.
+- Added batch file to download additional (needed) tools.
+- Ask for the APK/APKS file when executing the non-compiled script instead of loading the script itself as the package file.
+- Progress windows are no longer always on top.
+- Added option to always check for application updates.
+- Added option to keep words from original filename when renaming.
+- Added function to show error messages.
+
+
 *** APK-Info 1.35 (03.07.2019)
 
 - Revert bugged aapt binary.
