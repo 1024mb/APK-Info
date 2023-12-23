@@ -28,6 +28,7 @@ $ProgramName = 'APK-Info'
 #include <ScrollBarsConstants.au3>
 #include <File.au3>
 ;#include <Date.au3>
+#include <Misc.au3>
 
 Opt("TrayMenuMode", 1)
 Opt("TrayIconHide", 1)
@@ -580,6 +581,7 @@ Local $whGap = '            '
 
 While 1
 	$nMsg = GUIGetMsg()
+	
 	Switch $nMsg
 		Case $gSelAll
 			_SelAll()
@@ -634,8 +636,16 @@ While 1
 			IniWrite($sLastState, "Settings", "CheckSignature", $CheckSignature)
 
 		Case $gBtn_Rename
-			$sNewNameInput = _promptRename($strRenameAPK, $strNewName, $sNewFilenameAPK)
-			If $fileAPK <> $sNewNameInput And $sNewNameInput <> "" Then _renameAPK($sNewNameInput)
+			If _IsPressed(10) Then
+				If $fileAPK <> $sNewFilenameAPK And $sNewFilenameAPK <> "" Then
+					_renameAPK($sNewFilenameAPK)
+				EndIf
+			Else
+				$sNewNameInput = _promptRename($strRenameAPK, $strNewName, $sNewFilenameAPK)
+				If $fileAPK <> $sNewNameInput And $sNewNameInput <> "" Then
+					_renameAPK($sNewNameInput)
+				EndIf
+			EndIf
 
 		Case $gBtn_Adb
 			_adb()
