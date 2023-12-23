@@ -639,8 +639,17 @@ While 1
 
 		Case $gBtn_Rename
 			If _IsPressed(10) Then
-				If $fileAPK <> $sNewFilenameAPK And $sNewFilenameAPK <> "" Then
-					_renameAPK($sNewFilenameAPK)
+				If $renameWithoutPrompt == 1 Then
+					$sNewNameInput = _promptRename($strRenameAPK, $strNewName, $sNewFilenameAPK)
+					If $fileAPK <> $sNewNameInput And $sNewNameInput <> "" Then
+						_renameAPK($sNewNameInput)
+					EndIf
+				ElseIf $renameWithoutPrompt == 0 Then
+					If $fileAPK <> $sNewFilenameAPK And $sNewFilenameAPK <> "" Then
+						_renameAPK($sNewFilenameAPK)
+					EndIf
+				Else
+					showErrorMsg("RenameWithoutPrompt")
 				EndIf
 			Else
 				If $renameWithoutPrompt == 1 Then
