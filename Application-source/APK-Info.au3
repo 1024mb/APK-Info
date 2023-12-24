@@ -2170,9 +2170,9 @@ Func _checkUpdate()
 	ProgressSet(20)
 	Local $sHTMLContent = ""
 	$sHTMLContent = FileRead($tempPath & "\playstore_out.html")
-	$ver = StringRegExp($sHTMLContent, 'about how developers declare collection.+,\[\[\["([0-9][^"]+)".+', $STR_REGEXPARRAYMATCH)
+	$ver = StringRegExp($sHTMLContent, 'about how developers declare collection.+?(?!sideChannel),\[\[\["([0-9][^"]+)".+?\], sideChannel:.+', $STR_REGEXPARRAYMATCH)
 	If @error == 1 Then
-		$ver = StringRegExp($sHTMLContent, 'This app may collect these data types.+?\[\[\["([0-9][^"]+)".+', $STR_REGEXPARRAYMATCH)
+		$ver = StringRegExp($sHTMLContent, 'This app may collect these data types.+?(?!sideChannel),\[\[\["([0-9][^"]+)".+?\], sideChannel:.+', $STR_REGEXPARRAYMATCH)
 	EndIf
 	ProgressSet(30)
 	If IsArray($ver) Then
