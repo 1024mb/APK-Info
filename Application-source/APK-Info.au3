@@ -2177,7 +2177,7 @@ Func _checkUpdate()
 	ProgressSet(30)
 	If IsArray($ver) Then
 		$ver = StringStripWS($ver[0], $STR_STRIPLEADING + $STR_STRIPTRAILING)
-		If $ver <> $apk_Version And $ver <> 'Varies with device' Then
+		If $ver <> 'Varies with device' Then
 
 			Local $aiOnlineVersion = StringSplit($ver, ".")
 			Local $aiAPKVersion = StringSplit($apk_Version, ".")
