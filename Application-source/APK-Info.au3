@@ -161,7 +161,7 @@ Global $LastFolder = @WorkingDir
 
 readLastState($LastTop, $LastLeft, $LastWidth, $LastHeight)
 
-Local $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $VersionVaries
+Local $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible
 
 Local $LangSection = "Strings-" & $Language_code
 
@@ -179,7 +179,7 @@ $playStoreUrl = "https://play.google.com/store/apps/details?hl=en&id="
 $apkPureUrl = "https://apkpure.com/apk-info/"
 $strApkPure = "APKPure"
 
-readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $VersionVaries)
+readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible)
 
 Dim $sMinAndroidString, $sTgtAndroidString
 
@@ -2211,7 +2211,7 @@ Func _checkUpdate()
 			EndIf
 		EndIf
 	Else
-		$ver = $VersionVaries
+		$ver = $strVersionVaries
 		If StringInStr($sHTMLContent, "We're sorry, the requested URL was not found on this server.") Then
 			$ver = $strNotFound
 		EndIf
@@ -2230,35 +2230,39 @@ Func _checkUpdate()
 	$ver = StringRegExp($output, "version_name: '([^']*?)'", $STR_REGEXPARRAYMATCH)
 	If @error == 0 Then
 		$ver = StringStripWS($ver[0], $STR_STRIPLEADING + $STR_STRIPTRAILING)
-		Local $aiOnlineVersion = StringSplit($ver, ".")
-		Local $aiAPKVersion = StringSplit($apk_Version, ".")
+		If $ver <> "" Then
+			Local $aiOnlineVersion = StringSplit($ver, ".")
+			Local $aiAPKVersion = StringSplit($apk_Version, ".")
 
-		Local $iLengthOnlineVersion = UBound($aiOnlineVersion)
-		Local $iLengthAPKVersion = UBound($aiAPKVersion)
+			Local $iLengthOnlineVersion = UBound($aiOnlineVersion)
+			Local $iLengthAPKVersion = UBound($aiAPKVersion)
 
-		$iOnlineVersion = StringReplace($ver, ".", "")
-		$iAPKVersion = StringReplace($apk_Version, ".", "")
+			$iOnlineVersion = StringReplace($ver, ".", "")
+			$iAPKVersion = StringReplace($apk_Version, ".", "")
 
-		If $iLengthOnlineVersion > $iLengthAPKVersion Then
-			Local $iDiff = $iLengthOnlineVersion - $iLengthAPKVersion
-			While $iDiff > 0
-				$iAPKVersion *= 10
-				$iDiff -= 1
-			WEnd
-		ElseIf $iLengthAPKVersion > $iLengthOnlineVersion Then
-			Local $iDiff = $iLengthAPKVersion - $iLengthOnlineVersion
-			While $iDiff > 0
-				$iOnlineVersion *= 10
-				$iDiff -= 1
-			WEnd
-		EndIf
+			If $iLengthOnlineVersion > $iLengthAPKVersion Then
+				Local $iDiff = $iLengthOnlineVersion - $iLengthAPKVersion
+				While $iDiff > 0
+					$iAPKVersion *= 10
+					$iDiff -= 1
+				WEnd
+			ElseIf $iLengthAPKVersion > $iLengthOnlineVersion Then
+				Local $iDiff = $iLengthAPKVersion - $iLengthOnlineVersion
+				While $iDiff > 0
+					$iOnlineVersion *= 10
+					$iDiff -= 1
+				WEnd
+			EndIf
 
-		If $iOnlineVersion > $iAPKVersion Then
-			$ver = $ver & '   <--- ' & $strNewVersionIsAvailable
-		ElseIf $iOnlineVersion == $iAPKVersion Then
-			$ver = $ver & '   <--- ' & $strNoNewVersionIsAvailable
+			If $iOnlineVersion > $iAPKVersion Then
+				$ver = $ver & '   <--- ' & $strNewVersionIsAvailable
+			ElseIf $iOnlineVersion == $iAPKVersion Then
+				$ver = $ver & '   <--- ' & $strNoNewVersionIsAvailable
+			Else
+				$ver = $ver & '   <--- ' & $strMoreUpToDate
+			EndIf
 		Else
-			$ver = $ver & '   <--- ' & $strMoreUpToDate
+			$ver = $strNoVersionFound
 		EndIf
 	Else
 		$ver = 'error: ' & @error
@@ -2268,7 +2272,13 @@ Func _checkUpdate()
 	EndIf
 	$out = $out & $ver & @CRLF
 
-	If Not StringInStr($out, $strNewVersionIsAvailable) Then $out = $strNoUpdatesFound & @CRLF & @CRLF & $out
+	If Not StringInStr($out, $strNewVersionIsAvailable) Then
+		$out = $strNoUpdatesFound & @CRLF & @CRLF & $out
+	EndIf
+
+	If StringInStr($out, $strVersionVaries) And StringInStr($out, $strNoVersionFound) Then
+		$out = $strUpdateCheckingNotPossible & @CRLF & @CRLF & $out
+	EndIf
 
 	$out = $out & @CRLF & $strYes & ' = ' & $strPlayStore & @CRLF & $strNo & ' = ' & $strApkPure
 
@@ -2381,7 +2391,7 @@ Func readSettings(ByRef $ForcedGUILanguage, ByRef $OSLanguageCode, ByRef $Langua
 	EndIf
 EndFunc   ;==>readSettings
 
-Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSection, ByRef $strLabel, ByRef $strVersion, ByRef $strBuild, ByRef $strPkg, ByRef $strScreens, ByRef $strDensities, ByRef $strPermissions, ByRef $strFeatures, ByRef $strFilename, ByRef $strNewFilename, ByRef $strPlayStore, ByRef $strRename, ByRef $strExit, ByRef $strRenameAPK, ByRef $strNewName, ByRef $strError, ByRef $strRenameFail, ByRef $strSelectAPK, ByRef $strCurDev, ByRef $strCurDevBuild, ByRef $strUnknown, ByRef $strABIs, ByRef $strSignature, ByRef $strIcon, ByRef $strLoading, ByRef $strTextures, ByRef $strHash, ByRef $strInstall, ByRef $strUninstall, ByRef $strLocales, ByRef $strClose, ByRef $strNoAdbDevices, ByRef $strMinMaxSDK, ByRef $strMaxSDK, ByRef $strTargetCompileSDK, ByRef $strCompileSDK, ByRef $strLanguage, ByRef $strSupport, ByRef $strDebuggable, ByRef $strLabelInLocales, ByRef $strNewVersionIsAvailable, ByRef $strNoNewVersionIsAvailable, ByRef $strMoreUpToDate, ByRef $strTextInformation, ByRef $strLoadSignature, ByRef $strStart, ByRef $strExceededTimeout, ByRef $strCheckUpdate, ByRef $strYes, ByRef $strNo, ByRef $strNotFound, ByRef $strNoUpdatesFound, ByRef $strNeedJava, ByRef $strErrorTitle, ByRef $strExtractAPKSError, ByRef $strGettingContentAPKSError, ByRef $strRenFileAlreadyExistsMsg, ByRef $strUknownValueMsg, ByRef $strUses, ByRef $strImplied, ByRef $strNotRequired, ByRef $strOthers, ByRef $URLPlayStore, ByRef $PlayStoreLanguage, ByRef $VersionVaries)
+Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSection, ByRef $strLabel, ByRef $strVersion, ByRef $strBuild, ByRef $strPkg, ByRef $strScreens, ByRef $strDensities, ByRef $strPermissions, ByRef $strFeatures, ByRef $strFilename, ByRef $strNewFilename, ByRef $strPlayStore, ByRef $strRename, ByRef $strExit, ByRef $strRenameAPK, ByRef $strNewName, ByRef $strError, ByRef $strRenameFail, ByRef $strSelectAPK, ByRef $strCurDev, ByRef $strCurDevBuild, ByRef $strUnknown, ByRef $strABIs, ByRef $strSignature, ByRef $strIcon, ByRef $strLoading, ByRef $strTextures, ByRef $strHash, ByRef $strInstall, ByRef $strUninstall, ByRef $strLocales, ByRef $strClose, ByRef $strNoAdbDevices, ByRef $strMinMaxSDK, ByRef $strMaxSDK, ByRef $strTargetCompileSDK, ByRef $strCompileSDK, ByRef $strLanguage, ByRef $strSupport, ByRef $strDebuggable, ByRef $strLabelInLocales, ByRef $strNewVersionIsAvailable, ByRef $strNoNewVersionIsAvailable, ByRef $strMoreUpToDate, ByRef $strTextInformation, ByRef $strLoadSignature, ByRef $strStart, ByRef $strExceededTimeout, ByRef $strCheckUpdate, ByRef $strYes, ByRef $strNo, ByRef $strNotFound, ByRef $strNoUpdatesFound, ByRef $strNeedJava, ByRef $strErrorTitle, ByRef $strExtractAPKSError, ByRef $strGettingContentAPKSError, ByRef $strRenFileAlreadyExistsMsg, ByRef $strUknownValueMsg, ByRef $strUses, ByRef $strImplied, ByRef $strNotRequired, ByRef $strOthers, ByRef $URLPlayStore, ByRef $PlayStoreLanguage, ByRef $strVersionVaries, ByRef $strNoVersionFound, ByRef $strUpdateCheckingNotPossible)
 	$strLabel = IniRead($sIniLocalization, $LangSection, "Application", "Application")
 	$strVersion = IniRead($sIniLocalization, $LangSection, "Version", "Version")
 	$strBuild = IniRead($sIniLocalization, $LangSection, "Build", "Build")
@@ -2449,7 +2459,10 @@ Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSectio
 	$URLPlayStore = IniRead($sIniLocalization, $LangSection, "URLPlaystore", "https://play.google.com/store/apps/details?id=")
 
 	$PlayStoreLanguage = IniRead($sIniLocalization, $LangSection, "PlayStoreLanguage", $Language_code)
-	$VersionVaries = IniRead($sIniLocalization, $LangSection, "VersionVaries", "Version varies with device.")
+
+	$strVersionVaries = IniRead($sIniLocalization, $LangSection, "VersionVaries", "Version varies with device.")
+	$strNoVersionFound = IniRead($sIniLocalization, $LangSection, "NoVersionFound", "Version information not found.")
+	$strUpdateCheckingNotPossible = IniRead($sIniLocalization, $LangSection, "UpdateCheckingNotPossible", "New version checking is not possible.")
 EndFunc   ;==>readLocalization
 
 Func readLastState(ByRef $LastTop, ByRef $LastLeft, ByRef $LastWidth, ByRef $LastHeight)
