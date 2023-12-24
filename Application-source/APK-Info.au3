@@ -71,41 +71,9 @@ Global $bSDKTargetAlreadyParsed = False
 Global $bPackageAlreadyParsed = False
 Global $sAPKSTempPath = ''
 Global $bIconNotInside = False
-Global $bADBInPath = False
-Global $bCurlInPath = False
-Global $bAPKSignerInPath = False
-Global $b7zInPath = False
-Global $bAaptInPath = False
-Global $bMagickInPath = False
 Global $bAPKIconBuilt = False
 
-If RunWait('WHERE /Q adb.exe', @WindowsDir, @SW_HIDE) == 0 Then
-	$bADBInPath = True
-EndIf
-
-If RunWait('WHERE /Q curl.exe', @WindowsDir, @SW_HIDE) == 0 Then
-	$bCurlInPath = True
-EndIf
-
-If RunWait('WHERE /Q apksigner.bat', @WindowsDir, @SW_HIDE) == 0 Then
-	$bAPKSignerInPath = True
-EndIf
-
-If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
-	$b7zInPath = True
-EndIf
-
-If RunWait('WHERE /Q aapt.exe', @WindowsDir, @SW_HIDE) == 0 Then
-	$bAaptInPath = True
-EndIf
-
-If RunWait('WHERE /Q dwebp.exe', @WindowsDir, @SW_HIDE) == 0 Then
-	$bDWebpInPath = True
-EndIf
-
-If RunWait('WHERE /Q magick.exe', @WindowsDir, @SW_HIDE) == 0 Then
-	$bMagickInPath = True
-EndIf
+Global $sAaptPath, $sAapt2Path, $sSevenZipPath, $sMagickPath, $sADBPath, $sCurlPath, $sAPKSignerPath
 
 If FileExists($Inidir & "user.ini") Then
 	FileMove($IniDir & "user.ini", $IniDir & "last_state.ini")
@@ -184,115 +152,18 @@ EndFunc   ;==>_getDebugFile
 ; more info on country code
 ; https://www.autoitscript.com/autoit3/docs/appendix/OSLangCodes.htm
 
-$ForcedGUILanguage = _readSettings("ForcedGUILanguage", "auto")
-$OSLanguageCode = @OSLang
-If $ForcedGUILanguage == "auto" Then
-	$Language_code = IniRead($sIniAppConfig, "OSLanguage", @OSLang, "en")
-Else
-	$Language_code = $ForcedGUILanguage
-EndIf
+Local $ForcedGUILanguage, $OSLanguageCode, $Language_code, $LocalizeName, $CheckSignature, $FileNamePattern, $ShowHash, $CustomStore, $SignatureNames, $TextInfo, $JavaPath, $AdbInit, $AdbKill, $AdbTimeout, $RestoreGUI, $OldVirusTotal, $CheckNewVersion, $ShowLangCode, $keepWords, $keepWordsList, $keepWordsEncloseChars, $keepWordsCombine, $keepWordsMatchStart, $keepWordsRecase, $renameWithoutPrompt, $FileNameSpace
 
-$LocalizeName = _readSettings("LocalizeName", "1")
-$CheckSignature = _readSettings("CheckSignature", "1")
-$FileNamePattern = _readSettings("FileNamePattern", "%label% %version%.%build%")
-$ShowHash = _readSettings("ShowHash", '')
-$CustomStore = _readSettings("CustomStore", '')
-$SignatureNames = _readSettings("SignatureNames", '')
-$TextInfo = _readSettings("TextInfo", '')
-$JavaPath = _readSettings("JavaPath", '')
-$AdbInit = _readSettings("AdbInit", '')
-$AdbKill = _readSettings("AdbKill", '0')
-$AdbTimeout = _readSettings("AdbTimeout", '15')
-$RestoreGUI = _readSettings("RestoreGUI", '0')
-$OldVirusTotal = _readSettings("OldVirusTotal", '0')
-$CheckNewVersion = _readSettings("CheckNewVersion", '1')
-$ShowLangCode = _readSettings("ShowLangCode", "1")
-$keepWords = _readSettings("KeepWords", "0")
-If $keepWords == 1 Then
-	$keepWordsList = _readSettings("KeepWordsList", "")
-	$keepWordsEncloseChars = _readSettings("KeepWordsEncloseChars", "")
-	$keepWordsCombine = _readSettings("KeepWordsCombine", "1")
-	$keepWordsMatchStart = _readSettings("KeepWordsMatchStart", "0")
-	$keepWordsRecase = _readSettings("KeepWordsRecase", "0")
-EndIf
+readSettings($ForcedGUILanguage, $OSLanguageCode, $Language_code, $LocalizeName, $CheckSignature, $FileNamePattern, $ShowHash, $CustomStore, $SignatureNames, $TextInfo, $JavaPath, $AdbInit, $AdbKill, $AdbTimeout, $RestoreGUI, $OldVirusTotal, $CheckNewVersion, $ShowLangCode, $keepWords, $keepWordsList, $keepWordsEncloseChars, $keepWordsCombine, $keepWordsMatchStart, $keepWordsRecase, $renameWithoutPrompt, $FileNameSpace)
 
-$renameWithoutPrompt = _readSettings("RenameWithoutPrompt", "0")
+Local $LastTop, $LastLeft, $LastWidth, $LastHeight
+Global $LastFolder = @WorkingDir
 
-Local $space = 'space'
-$FileNameSpace = _readSettings("FileNameSpace", $space)
-If $FileNameSpace == $space Then $FileNameSpace = ' '
-$LastFolder = IniRead($sLastState, "State", "LastFolder", @WorkingDir)
+readLastState($LastTop, $LastLeft, $LastWidth, $LastHeight)
 
-Local $LastTop = IniRead($sLastState, "State", "LastTop", 0)
-Local $LastLeft = IniRead($sLastState, "State", "LastLeft", 0)
-Local $LastWidth = IniRead($sLastState, "State", "LastWidth", 0)
-Local $LastHeight = IniRead($sLastState, "State", "LastHeight", 0)
+Local $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage
 
 Local $LangSection = "Strings-" & $Language_code
-
-$strLabel = IniRead($sIniLocalization, $LangSection, "Application", "Application")
-$strVersion = IniRead($sIniLocalization, $LangSection, "Version", "Version")
-$strBuild = IniRead($sIniLocalization, $LangSection, "Build", "Build")
-$strPkg = IniRead($sIniLocalization, $LangSection, "Package", "Package")
-$strScreens = IniRead($sIniLocalization, $LangSection, "ScreenSizes", "Screen Sizes")
-$strDensities = IniRead($sIniLocalization, $LangSection, "Densities", "Densities")
-$strPermissions = IniRead($sIniLocalization, $LangSection, "Permissions", "Permissions")
-$strFeatures = IniRead($sIniLocalization, $LangSection, "Features", "Features")
-$strFilename = IniRead($sIniLocalization, $LangSection, "CurrentName", "Current Name")
-$strNewFilename = IniRead($sIniLocalization, $LangSection, "NewName", "New Name")
-$strPlayStore = IniRead($sIniLocalization, $LangSection, "PlayStore", "Play Store")
-$strRename = IniRead($sIniLocalization, $LangSection, "RenameFile", "Rename File")
-$strExit = IniRead($sIniLocalization, $LangSection, "Exit", "Exit")
-$strRenameAPK = IniRead($sIniLocalization, $LangSection, "RenameAPKFile", "Rename APK File")
-$strNewName = IniRead($sIniLocalization, $LangSection, "NewAPKFilename", "New APK Filename")
-$strError = IniRead($sIniLocalization, $LangSection, "Error", "Error!")
-$strRenameFail = IniRead($sIniLocalization, $LangSection, "RenameFail", "APK File could not be renamed.")
-$strSelectAPK = IniRead($sIniLocalization, $LangSection, "SelectAPKFile", "Select APK file")
-$strCurDev = IniRead($sIniLocalization, $LangSection, "CurDev", "Cur_Dev")
-$strCurDevBuild = IniRead($sIniLocalization, $LangSection, "CurDevBuild", "Current Dev. Build")
-$strUnknown = IniRead($sIniLocalization, $LangSection, "Unknown", "Unknown")
-$strABIs = IniRead($sIniLocalization, $LangSection, "ABIs", "ABIs")
-$strSignature = IniRead($sIniLocalization, $LangSection, "Signature", "Signature")
-$strIcon = IniRead($sIniLocalization, $LangSection, "Icon", "Icon")
-$strLoading = IniRead($sIniLocalization, $LangSection, "Loading", "Loading")
-$strTextures = IniRead($sIniLocalization, $LangSection, "Textures", "Textures")
-$strHash = IniRead($sIniLocalization, $LangSection, "Hash", "Hash")
-$strInstall = IniRead($sIniLocalization, $LangSection, "Install", "Install")
-$strUninstall = IniRead($sIniLocalization, $LangSection, "Uninstall", "Uninstall")
-$strLocales = IniRead($sIniLocalization, $LangSection, "Locales", "Locales")
-$strClose = IniRead($sIniLocalization, $LangSection, "Close", "Close")
-$strNoAdbDevices = IniRead($sIniLocalization, $LangSection, "NoAdbDevicesFound", "No ADB devices found.")
-$strMinMaxSDK = IniRead($sIniLocalization, $LangSection, "MinMaxSDK", "Min. / Max. SDK")
-$strMaxSDK = IniRead($sIniLocalization, $LangSection, "MaxSDK", "Max. SDK")
-$strTargetCompileSDK = IniRead($sIniLocalization, $LangSection, "TargetCompileSDK", "Target / Compile SDK")
-$strCompileSDK = IniRead($sIniLocalization, $LangSection, "CompileSDK", "Compile SDK")
-$strLanguage = IniRead($sIniLocalization, $LangSection, "Language", "Language")
-$strSupport = IniRead($sIniLocalization, $LangSection, "Support", "Support")
-$strDebuggable = IniRead($sIniLocalization, $LangSection, "Debuggable", "Debuggable")
-$strLabelInLocales = IniRead($sIniLocalization, $LangSection, "LabelInLocales", "Application name in different locales")
-$strNewVersionIsAvailable = IniRead($sIniLocalization, $LangSection, "NewVersionIsAvailable", "A new version is available")
-$strNoNewVersionIsAvailable = IniRead($sIniLocalization, $LangSection, "NoNewVersionIsAvailable", "Up to date")
-$strMoreUpToDate = IniRead($sIniLocalization, $LangSection, "MoreUpToDate", "Your version is more up to date")
-$strTextInformation = IniRead($sIniLocalization, $LangSection, "TextInformation", "Text information")
-$strLoadSignature = IniRead($sIniLocalization, $LangSection, "LoadSignature", "Load signature")
-$strStart = IniRead($sIniLocalization, $LangSection, "Start", "Start")
-$strExceededTimeout = IniRead($sIniLocalization, $LangSection, "ExceededTimeout", "Exceeded timeout response from the command")
-$strCheckUpdate = IniRead($sIniLocalization, $LangSection, "CheckUpdate", "Check update")
-$strYes = IniRead($sIniLocalization, $LangSection, "Yes", "Yes")
-$strNo = IniRead($sIniLocalization, $LangSection, "No", "No")
-$strNotFound = IniRead($sIniLocalization, $LangSection, "NotFound", "Not found")
-$strNoUpdatesFound = IniRead($sIniLocalization, $LangSection, "NoUpdatesFound", "No updates found")
-$strNeedJava = IniRead($sIniLocalization, $LangSection, "NeedJava", 'Need Java 1.8 or higher.')
-$strErrorTitle = IniRead($sIniLocalization, $LangSection, "ErrorTitle", 'Error')
-$strExtractAPKSError = IniRead($sIniLocalization, $LangSection, "ExtractAPKSError", 'There was an error extracting the APKS file')
-$strGettingContentAPKSError = IniRead($sIniLocalization, $LangSection, "GettingContentAPKSError", 'There was an error getting the contents of the APKS file')
-$strRenFileAlreadyExistsMsg = IniRead($sIniLocalization, $LangSection, "RenFileAlreadyExistsMsg", 'The output file already exists, please enter a new name')
-$strUknownValueMsg = IniRead($sIniLocalization, $LangSection, "UknownValueMsg", 'The specified value for the following option is invalid:')
-
-$strUses = IniRead($sIniLocalization, $LangSection, "Uses", "uses")
-$strImplied = IniRead($sIniLocalization, $LangSection, "Implied", "implied")
-$strNotRequired = IniRead($sIniLocalization, $LangSection, "NotRequired", "not required")
-$strOthers = IniRead($sIniLocalization, $LangSection, "Others", "others")
 
 $strWinCode = 'WinCode'
 $strOpenGLES = 'OpenGL ES '
@@ -304,14 +175,11 @@ $strVirusTotal = 'VirusTotal'
 $strAdb = 'ADB'
 
 $urlUpdate = 'https://github.com/1024mb/APK-Info/releases/latest'
-
-$URLPlayStore = IniRead($sIniLocalization, $LangSection, "URLPlaystore", "https://play.google.com/store/apps/details?id=")
-
 $playStoreUrl = "https://play.google.com/store/apps/details?hl=en&id="
 $apkPureUrl = "https://apkpure.com/apk-info/"
 $strApkPure = "APKPure"
 
-$PlayStoreLanguage = IniRead($sIniLocalization, $LangSection, "PlayStoreLanguage", $Language_code)
+readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage)
 
 Dim $sMinAndroidString, $sTgtAndroidString
 
@@ -1084,7 +952,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 					Else
 						showErrorMsg("KeepWordsRecase")
 					EndIf
-					$fileAPKAlt = StringReplace($fileAPKAlt, StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), "")
+					$fileAPKAlt = StringRegExpReplace($fileAPKAlt, "(?i)" & $keepWordsRegEx & StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "([^A-Za-zÁ-Úá-úÑñ]|$)", "$1$2")
 				EndIf
 			Next
 			If $sMatchedWords <> "" Then
@@ -1114,7 +982,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 					Else
 						showErrorMsg("KeepWordsRecase")
 					EndIf
-					$fileAPKAlt = StringReplace($fileAPKAlt, StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING), "")
+					$fileAPKAlt = StringRegExpReplace($fileAPKAlt, "(?i)" & $keepWordsRegEx & StringStripWS($sWord, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "([^A-Za-zÁ-Úá-úÑñ]|$)", "$1$2")
 				EndIf
 			Next
 		Else
@@ -1331,19 +1199,13 @@ EndFunc   ;==>_LoadSignature
 Func _getSignature($prmAPK, $load)
 	$output = ''
 	If $load == 1 Then
-		If $bAPKSignerInPath Then
-			_RunBatch('apksigner', @ComSpec & ' /C apksigner verify --v --print-certs "' & $prmAPK & '"', "apksigner")
-			If $bIsAPKS Then
-				$output = FileRead($sAPKSTempPath & '\apksigner.txt')
-				FileDelete($sAPKSTempPath & '\apksigner.txt')
-			Else
-				$output = FileRead($tempPath & '\apksigner.txt')
-				FileDelete($tempPath & '\apksigner.txt')
-			EndIf
+		_RunBatch('apksigner', @ComSpec & ' /C ' & $sAPKSignerPath & ' verify --v --print-certs "' & $prmAPK & '"', "apksigner")
+		If $bIsAPKS Then
+			$output = FileRead($sAPKSTempPath & '\apksigner.txt')
+			FileDelete($sAPKSTempPath & '\apksigner.txt')
 		Else
-			$process = _Run('apksigner', '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar" verify --v --print-certs "' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			$output &= _readAll($process, 'apksigner stdout')
-			$output &= _readAll($process, 'apksigner stderr', False)
+			$output = FileRead($tempPath & '\apksigner.txt')
+			FileDelete($tempPath & '\apksigner.txt')
 		EndIf
 
 		If $output == '' Or StringInStr($output, 'java.lang.UnsupportedClassVersionError') Or StringInStr($output, 'Unsupported major.minor version') Then
@@ -1389,25 +1251,31 @@ Func _getBadge($prmAPK)
 
 	If $bIsAPKS Then
 		For $i = 1 To UBound($aAPKSContent) - 1
-			If $bAaptInPath Then
-				$foo = _Run('badging', 'aapt d --include-meta-data badging ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			Else
-				$foo = _Run('badging', '"' & $toolsDir & 'aapt" d --include-meta-data badging ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			EndIf
-			$output &= StringStripWS(_readAll($foo, 'badging'), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
+			$foo = _Run('badging (aapt)', $sAaptPath & ' d --include-meta-data badging ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			$output &= StringStripWS(_readAll($foo, 'badging (aapt)'), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
 		Next
+		If $output == '' Or StringInStr($output, "Illegal byte sequence") Then
+			$output = ''
+			For $i = 1 To UBound($aAPKSContent) - 1
+				$foo = _Run('badging (aapt2)', $sAapt2Path & ' d badging --include-meta-data ' & '"' & $aAPKSContent[$i] & '"', $STDERR_CHILD + $STDOUT_CHILD)
+				$output &= StringStripWS(_readAll($foo, 'badging (aapt2)'), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
+			Next
+		EndIf
+
 		If $output == '' Then
 			For $i = 1 To UBound($aAPKSContent) - 1
 				$output &= StringStripWS(_readAll($foo, 'badging stderr', False), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
 			Next
 		EndIf
 	Else
-		If $bAaptInPath Then
-			$foo = _Run('badging', 'aapt d --include-meta-data badging ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-		Else
-			$foo = _Run('badging', '"' & $toolsDir & 'aapt" d --include-meta-data badging ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		$foo = _Run('badging (aapt)', $sAaptPath & ' d --include-meta-data badging ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		$output = StringStripWS(_readAll($foo, 'badging (aapt)'), $STR_STRIPLEADING + $STR_STRIPTRAILING)
+
+		If $output == '' Or StringInStr($output, "Illegal byte sequence") Then
+			$foo = _Run('badging (aapt2)', $sAapt2Path & ' d badging --include-meta-data ' & '"' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+			$output = StringStripWS(_readAll($foo, 'badging (aapt2)'), $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		EndIf
-		$output = StringStripWS(_readAll($foo, 'badging'), $STR_STRIPLEADING + $STR_STRIPTRAILING)
+
 		If $output == '' Then
 			$output = StringStripWS(_readAll($foo, 'badging stderr', False), $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		EndIf
@@ -1750,18 +1618,10 @@ EndFunc   ;==>_parseLines
 Func _searchPng($aIcons)
 	$foo = ''
 	If Not $searchPngCache Then
-		If $b7zInPath Then
-			If $bIsAPKS Then
-				$foo = _Run('list', '7z l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			Else
-				$foo = _Run('list', '7z l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			EndIf
+		If $bIsAPKS Then
+			$foo = _Run('list', $sSevenZipPath & ' l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
 		Else
-			If $bIsAPKS Then
-				$foo = _Run('list', '"' & $toolsDir & '7z" l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			Else
-				$foo = _Run('list', '"' & $toolsDir & '7z" l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
-			EndIf
+			$foo = _Run('list', $sSevenZipPath & ' l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
 		EndIf
 		$output = _readAll($foo, 'list')
 		$searchPngCache = _StringExplode($output, @CRLF)
@@ -1837,41 +1697,22 @@ Func _buildPng($sPathMainAPK)
 		Return ''
 	EndIf
 
-	If $b7zInPath Then
-		If $bIsAPKS Then
-			_RunWait('extracting icons', '7z e "' & $sAPKSTempPath & '\base.apk" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $sAPKSTempPath & '\base" -r -aoa -y')
-		Else
-			_RunWait('extracting icons', '7z e "' & $fullPathAPK & '" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $tempPath & '" -r -aoa -y')
-		EndIf
+	If $bIsAPKS Then
+		_RunWait('extracting icons', $sSevenZipPath & ' e "' & $sAPKSTempPath & '\base.apk" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $sAPKSTempPath & '\base" -r -aoa -y')
 	Else
-		If $bIsAPKS Then
-			_RunWait('extracting icons', '"' & $toolsDir & '7z.exe" e "' & $sAPKSTempPath & '\base.apk" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $sAPKSTempPath & '\base" -r -aoa -y')
-		Else
-			_RunWait('extracting icons', '"' & $toolsDir & '7z.exe" e "' & $fullPathAPK & '" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $tempPath & '" -r -aoa -y')
-		EndIf
+		_RunWait('extracting icons', $sSevenZipPath & ' e "' & $fullPathAPK & '" "' & $sForegroundPngPath & '" "' & $sBackgroundPngPath & '" -o"' & $tempPath & '" -r -aoa -y')
 	EndIf
 
-	If $bMagickInPath Then
-		If $bIsAPKS Then
-			_RunWait('building icon', 'magick "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $sAPKSTempPath & '\built_icon.png"')
-			$bAPKIconBuilt = True
-			$sIconPath = $sAPKSTempPath & '\built_icon.png'
-		Else
-			_RunWait('building icon', 'magick "' & $tempPath & '\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $tempPath & '\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $tempPath & '\built_icon.png"')
-			$bAPKIconBuilt = True
-			$sIconPath = $tempPath & '\built_icon.png'
-		EndIf
+	If $bIsAPKS Then
+		_RunWait('building icon', $sMagickPath & ' "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $sAPKSTempPath & '\built_icon.png"')
+		$bAPKIconBuilt = True
+		$sIconPath = $sAPKSTempPath & '\built_icon.png'
 	Else
-		If $bIsAPKS Then
-			_RunWait('building icon', '"' & $toolsDir & 'convert.exe"' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $sAPKSTempPath & '\built_icon.png"')
-			$bAPKIconBuilt = True
-			$sIconPath = $sAPKSTempPath & '\built_icon.png'
-		Else
-			_RunWait('building icon', '"' & $toolsDir & 'convert.exe"' & $tempPath & '\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $tempPath & '\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $tempPath & '\built_icon.png"')
-			$bAPKIconBuilt = True
-			$sIconPath = $tempPath & '\built_icon.png'
-		EndIf
+		_RunWait('building icon', $sMagickPath & ' "' & $tempPath & '\' & StringRegExpReplace($sBackgroundPngPath, '.+\/([^\/]+)', '$1') & '" "' & $tempPath & '\' & StringRegExpReplace($sForegroundPngPath, '.+\/([^\/]+)', '$1') & '" -composite "' & $tempPath & '\built_icon.png"')
+		$bAPKIconBuilt = True
+		$sIconPath = $tempPath & '\built_icon.png'
 	EndIf
+
 	Return $sIconPath
 EndFunc   ;==>_buildPng
 
@@ -1900,64 +1741,32 @@ Func _extractIcon()
 	If $apk_IconPath <> '' Then
 		If $bAPKIconBuilt Then
 			$magickOut = ''
-			If $bMagickInPath Then
-				If $bIsAPKS Then
-					RunWait('magick "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-					FileDelete($sAPKSTempPath & '\magick.txt')
-				Else
-					RunWait('magick "' & $apk_IconPath & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($tempPath & '\magick.txt')
-					FileDelete($tempPath & '\magick.txt')
-				EndIf
+			If $bIsAPKS Then
+				RunWait($sMagickPath & ' "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+				FileDelete($sAPKSTempPath & '\magick.txt')
 			Else
-				If $bIsAPKS Then
-					RunWait('"' & $toolsDir & '\convert.exe" "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-					FileDelete($sAPKSTempPath & '\magick.txt')
-				Else
-					RunWait('"' & $toolsDir & '\convert.exe" "' & $apk_IconPath & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($tempPath & '\magick.txt')
-					FileDelete($tempPath & '\magick.txt')
-				EndIf
+				RunWait($sMagickPath & ' "' & $apk_IconPath & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($tempPath & '\magick.txt')
+				FileDelete($tempPath & '\magick.txt')
 			EndIf
 			$magickOutput = _StringExplode($magickOut, @CRLF)
 			$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
 		Else
-			If $b7zInPath Then
-				If $bIsAPKS Then
-					_RunWait('icons', '7z e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
-				Else
-					_RunWait('icons', '7z e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
-				EndIf
+			If $bIsAPKS Then
+				_RunWait('icons', $sSevenZipPath & ' e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
 			Else
-				If $bIsAPKS Then
-					_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
-				Else
-					_RunWait('icons', '"' & $toolsDir & '7z" e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
-				EndIf
+				_RunWait('icons', $sSevenZipPath & ' e ' & '"' & $fullPathAPK & '" ' & $apk_IconPath & " -o" & '"' & $tempPath & '" -r -aoa -y')
 			EndIf
 
-			If $bMagickInPath Then
-				If $bIsAPKS Then
-					RunWait('magick "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-					FileDelete($sAPKSTempPath & '\magick.txt')
-				Else
-					RunWait('magick "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($tempPath & '\magick.txt')
-					FileDelete($tempPath & '\magick.txt')
-				EndIf
+			If $bIsAPKS Then
+				RunWait($sMagickPath & ' "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+				FileDelete($sAPKSTempPath & '\magick.txt')
 			Else
-				If $bIsAPKS Then
-					RunWait('"' & $toolsDir & '\convert.exe" "' & $sAPKSTempPath & '\base\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-					FileDelete($sAPKSTempPath & '\magick.txt')
-				Else
-					RunWait('"' & $toolsDir & '\convert.exe" "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
-					$magickOut = FileRead($tempPath & '\magick.txt')
-					FileDelete($tempPath & '\magick.txt')
-				EndIf
+				RunWait($sMagickPath & ' "' & $tempPath & '\' & StringRegExpReplace($apk_IconPath, '.+\\([^\\]+)', '$1') & '" -resize 1x1 txt:"' & $tempPath & '\magick.txt"', "", @SW_HIDE)
+				$magickOut = FileRead($tempPath & '\magick.txt')
+				FileDelete($tempPath & '\magick.txt')
 			EndIf
 			$magickOutput = _StringExplode($magickOut, @CRLF)
 			$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
@@ -1970,15 +1779,9 @@ Func _extractIcon()
 			$bIconNotInside = True
 		EndIf
 
-		If $bMagickInPath Then
-			RunWait('magick "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-			$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-			FileDelete($sAPKSTempPath & '\magick.txt')
-		Else
-			RunWait('"' & $toolsDir & '\convert.exe" "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
-			$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
-			FileDelete($sAPKSTempPath & '\magick.txt')
-		EndIf
+		RunWait($sMagickPath & ' "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
+		$magickOut = FileRead($sAPKSTempPath & '\magick.txt')
+		FileDelete($sAPKSTempPath & '\magick.txt')
 
 		$magickOutput = _StringExplode($magickOut, @CRLF)
 		$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
@@ -1998,11 +1801,7 @@ Func _cleanUp()
 
 	DirRemove($tempPath, 1) ; clean files from current run
 	If $AdbKill == '2' Then
-		If $bADBInPath Then
-			_RunWait('kill', 'adb kill-server')
-		Else
-			_RunWait('kill', '"' & $toolsDir & 'adb" kill-server')
-		EndIf
+		_RunWait('kill', $sADBPath & ' kill-server')
 	EndIf
 EndFunc   ;==>_cleanUp
 
@@ -2041,11 +1840,7 @@ Func _drawImg($path)
 	If StringRight($filename, 5) == '.webp' Then
 		$tmpFilename = StringTrimRight($filename, 5) & '.png'
 		DirCreate($tempPath)
-		If $bMagickInPath Then
-			_RunWait('magick', 'magick "' & $filename & '" "' & $tmpFilename & '"')
-		Else
-			_RunWait('magick', '"' & $toolsDir & 'convert" "' & $filename & '" "' & $tmpFilename & '"')
-		EndIf
+		_RunWait('magick', $sMagickPath & ' "' & $filename & '" "' & $tmpFilename & '"')
 		If FileExists($tmpFilename) Then
 			FileDelete($filename) ; no need - try delete
 			$filename = $tmpFilename
@@ -2114,26 +1909,15 @@ EndFunc   ;==>_showText
 Func _adbDevice($title)
 	ProgressOn($title, 'ADB', '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 
-	If $bADBInPath Then
-		_RunWait('start', 'adb start-server')
-	Else
-		_RunWait('start', '"' & $toolsDir & 'adb" start-server')
-	EndIf
+	_RunWait('start', $sADBPath & ' start-server')
 
 	For $cmd In _StringExplode($AdbInit, '|')
 		If $cmd == '' Then ContinueLoop
-		If $bADBInPath Then
-			_RunWait('init', 'adb ' & $cmd)
-		Else
-			_RunWait('init', '"' & $toolsDir & 'adb" ' & $cmd)
-		EndIf
+		_RunWait('init', $sADBPath & ' ' & $cmd)
 	Next
 
-	If $bADBInPath Then
-		$foo = _Run('devices', 'adb devices -l', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-	Else
-		$foo = _Run('devices', '"' & $toolsDir & 'adb" devices -l', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-	EndIf
+	$foo = _Run('devices', $sADBPath & ' devices -l', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+
 	$output = _readAll($foo, 'devices')
 
 	$output = StringStripWS(StringReplace($output, 'List of devices attached', ''), $STR_STRIPLEADING + $STR_STRIPTRAILING)
@@ -2177,11 +1961,7 @@ Func _adbDevice($title)
 			$cmd = _StringExplode($cmd, ': ', 1)
 
 			$ids &= GUICtrlCreateButton($cmd[0], $left, $top, $btnWidth, $btnHeight) & @CRLF
-			If $bADBInPath Then
-				$commands &= StringReplace($cmd[1], '%adb%', 'adb -s "' & $device & '"') & @CRLF
-			Else
-				$commands &= StringReplace($cmd[1], '%adb%', '"' & $toolsDir & 'adb" -s "' & $device & '"') & @CRLF
-			EndIf
+			$commands &= StringReplace($cmd[1], '%adb%', $sADBPath & ' -s "' & $device & '"') & @CRLF
 
 			$left += $btnWidth + $gap
 		Next
@@ -2281,11 +2061,7 @@ Func _adb()
 	MsgBox(0, $title, $output)
 
 	If $AdbKill == '1' Then
-		If $bADBInPath Then
-			_RunWait('kill', 'adb kill-server')
-		Else
-			_RunWait('kill', '"' & $toolsDir & 'adb" kill-server')
-		EndIf
+		_RunWait('kill', $sADBPath & ' kill-server')
 	EndIf
 EndFunc   ;==>_adb
 
@@ -2340,11 +2116,7 @@ Func _checkNewVersion()
 
 		If $tag[0] <> $now Or UBound($tag) <> 2 Or $CheckNewVersion == '4' Then
 			ProgressSet(10, $urlUpdate)
-			If $bCurlInPath Then
-				$foo = _Run('latest', 'curl -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-			Else
-				$foo = _Run('latest', '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-			EndIf
+			$foo = _Run('latest', $sCurlPath & ' -s -k --ssl-no-revoke -D - "' & $urlUpdate & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
 			$output = _readAll($foo, 'latest')
 			ProgressSet(90, '')
 			$url = _StringBetween2($output, "Location: ", @CRLF)
@@ -2393,11 +2165,8 @@ Func _checkUpdate()
 	ProgressOn($strCheckUpdate, $strPlayStore, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 	$out = $strPlayStore & ':' & @CRLF
 	$url1 = $playStoreUrl & $apk_PkgName
-	If $bCurlInPath Then
-		$foo = _Run($strPlayStore, 'curl -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-	Else
-		$foo = _Run($strPlayStore, '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-	EndIf
+	$foo = _Run($strPlayStore, $sCurlPath & ' -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+
 	ProgressSet(20)
 	$output = _readAll($foo, $strPlayStore)
 	ProgressSet(30)
@@ -2449,11 +2218,7 @@ Func _checkUpdate()
 	$out = $out & @CRLF & $strApkPure & ':' & @CRLF
 	ProgressSet(50, '', $strApkPure)
 	$url2 = $apkPureUrl & $apk_PkgName
-	If $bCurlInPath Then
-		$foo = _Run($strApkPure, 'curl -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-	Else
-		$foo = _Run($strApkPure, '"' & $toolsDir & 'curl" -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
-	EndIf
+	$foo = _Run($strApkPure, $sCurlPath & ' -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
 	ProgressSet(70)
 	$output = _readAll($foo, $strApkPure)
 	ProgressSet(80)
@@ -2522,3 +2287,172 @@ EndFunc   ;==>_Lib_IntToFloat
 Func showErrorMsg($sConfigOptionLabel)
 	MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strUknownValueMsg & @CRLF & @CRLF & $sConfigOptionLabel)
 EndFunc   ;==>showErrorMsg
+
+Func setToolsPath()
+	If RunWait('WHERE /Q adb.exe', @WindowsDir, @SW_HIDE) == 0 Then
+		$sADBPath = 'adb'
+	Else
+		$sADBPath = '"' & $toolsDir & 'adb.exe"'
+	EndIf
+	
+	If RunWait('WHERE /Q curl.exe', @WindowsDir, @SW_HIDE) == 0 Then
+		$sCurlPath = 'curl'
+	Else
+		$sCurlPath = '"' & $toolsDir & 'curl.exe"'
+	EndIf
+	
+	If RunWait('WHERE /Q apksigner.bat', @WindowsDir, @SW_HIDE) == 0 Then
+		$sAPKSignerPath = 'apksigner'
+	Else
+		$sAPKSignerPath = '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar"'
+	EndIf
+	
+	If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
+		$sSevenZipPath = '7z'
+	Else
+		$sSevenZipPath = '"' & $toolsDir & '7z.exe"'
+	EndIf
+	
+	If RunWait('WHERE /Q aapt.exe', @WindowsDir, @SW_HIDE) == 0 Then
+		$sAaptPath = 'aapt'
+	Else
+		$sAaptPath = '"' & $toolsDir & 'aapt.exe"'
+	EndIf
+	
+	If RunWait('WHERE /Q aapt2.exe', @WindowsDir, @SW_HIDE) == 0 Then
+		$sAapt2Path = 'aapt2'
+	Else
+		$sAapt2Path = '"' & $toolsDir & 'aapt2.exe"'
+	EndIf
+	
+	If RunWait('WHERE /Q magick.exe', @WindowsDir, @SW_HIDE) == 0 Then
+		$sMagickPath = 'magick'
+	Else
+		$sMagickPath = '"' & $toolsDir & 'convert.exe"'
+	EndIf
+EndFunc   ;==>setToolsPath
+
+Func readSettings(ByRef $ForcedGUILanguage, ByRef $OSLanguageCode, ByRef $Language_code, ByRef $LocalizeName, ByRef $CheckSignature, ByRef $FileNamePattern, ByRef $ShowHash, ByRef $CustomStore, ByRef $SignatureNames, ByRef $TextInfo, ByRef $JavaPath, ByRef $AdbInit, ByRef $AdbKill, ByRef $AdbTimeout, ByRef $RestoreGUI, ByRef $OldVirusTotal, ByRef $CheckNewVersion, ByRef $ShowLangCode, ByRef $keepWords, ByRef $keepWordsList, ByRef $keepWordsEncloseChars, ByRef $keepWordsCombine, ByRef $keepWordsMatchStart, ByRef $keepWordsRecase, ByRef $renameWithoutPrompt, ByRef $FileNameSpace)
+
+	$ForcedGUILanguage = _readSettings("ForcedGUILanguage", "auto")
+	$OSLanguageCode = @OSLang
+	If $ForcedGUILanguage == "auto" Then
+		$Language_code = IniRead($sIniAppConfig, "OSLanguage", @OSLang, "en")
+	Else
+		$Language_code = $ForcedGUILanguage
+	EndIf
+
+	$LocalizeName = _readSettings("LocalizeName", "1")
+	$CheckSignature = _readSettings("CheckSignature", "1")
+	$FileNamePattern = _readSettings("FileNamePattern", "%label% %version%.%build%")
+	$ShowHash = _readSettings("ShowHash", '')
+	$CustomStore = _readSettings("CustomStore", '')
+	$SignatureNames = _readSettings("SignatureNames", '')
+	$TextInfo = _readSettings("TextInfo", '')
+	$JavaPath = _readSettings("JavaPath", '')
+	$AdbInit = _readSettings("AdbInit", '')
+	$AdbKill = _readSettings("AdbKill", '0')
+	$AdbTimeout = _readSettings("AdbTimeout", '15')
+	$RestoreGUI = _readSettings("RestoreGUI", '0')
+	$OldVirusTotal = _readSettings("OldVirusTotal", '0')
+	$CheckNewVersion = _readSettings("CheckNewVersion", '1')
+	$ShowLangCode = _readSettings("ShowLangCode", "1")
+	$keepWords = _readSettings("KeepWords", "0")
+
+	setToolsPath()
+
+	If $keepWords == 1 Then
+		$keepWordsList = _readSettings("KeepWordsList", "")
+		$keepWordsEncloseChars = _readSettings("KeepWordsEncloseChars", "")
+		$keepWordsCombine = _readSettings("KeepWordsCombine", "1")
+		$keepWordsMatchStart = _readSettings("KeepWordsMatchStart", "0")
+		$keepWordsRecase = _readSettings("KeepWordsRecase", "0")
+	EndIf
+
+	$renameWithoutPrompt = _readSettings("RenameWithoutPrompt", "0")
+
+	Local $space = 'space'
+	$FileNameSpace = _readSettings("FileNameSpace", $space)
+	If $FileNameSpace == $space Then
+		$FileNameSpace = ' '
+	EndIf
+EndFunc   ;==>readSettings
+
+Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSection, ByRef $strLabel, ByRef $strVersion, ByRef $strBuild, ByRef $strPkg, ByRef $strScreens, ByRef $strDensities, ByRef $strPermissions, ByRef $strFeatures, ByRef $strFilename, ByRef $strNewFilename, ByRef $strPlayStore, ByRef $strRename, ByRef $strExit, ByRef $strRenameAPK, ByRef $strNewName, ByRef $strError, ByRef $strRenameFail, ByRef $strSelectAPK, ByRef $strCurDev, ByRef $strCurDevBuild, ByRef $strUnknown, ByRef $strABIs, ByRef $strSignature, ByRef $strIcon, ByRef $strLoading, ByRef $strTextures, ByRef $strHash, ByRef $strInstall, ByRef $strUninstall, ByRef $strLocales, ByRef $strClose, ByRef $strNoAdbDevices, ByRef $strMinMaxSDK, ByRef $strMaxSDK, ByRef $strTargetCompileSDK, ByRef $strCompileSDK, ByRef $strLanguage, ByRef $strSupport, ByRef $strDebuggable, ByRef $strLabelInLocales, ByRef $strNewVersionIsAvailable, ByRef $strNoNewVersionIsAvailable, ByRef $strMoreUpToDate, ByRef $strTextInformation, ByRef $strLoadSignature, ByRef $strStart, ByRef $strExceededTimeout, ByRef $strCheckUpdate, ByRef $strYes, ByRef $strNo, ByRef $strNotFound, ByRef $strNoUpdatesFound, ByRef $strNeedJava, ByRef $strErrorTitle, ByRef $strExtractAPKSError, ByRef $strGettingContentAPKSError, ByRef $strRenFileAlreadyExistsMsg, ByRef $strUknownValueMsg, ByRef $strUses, ByRef $strImplied, ByRef $strNotRequired, ByRef $strOthers, ByRef $URLPlayStore, ByRef $PlayStoreLanguage)
+	$strLabel = IniRead($sIniLocalization, $LangSection, "Application", "Application")
+	$strVersion = IniRead($sIniLocalization, $LangSection, "Version", "Version")
+	$strBuild = IniRead($sIniLocalization, $LangSection, "Build", "Build")
+	$strPkg = IniRead($sIniLocalization, $LangSection, "Package", "Package")
+	$strScreens = IniRead($sIniLocalization, $LangSection, "ScreenSizes", "Screen Sizes")
+	$strDensities = IniRead($sIniLocalization, $LangSection, "Densities", "Densities")
+	$strPermissions = IniRead($sIniLocalization, $LangSection, "Permissions", "Permissions")
+	$strFeatures = IniRead($sIniLocalization, $LangSection, "Features", "Features")
+	$strFilename = IniRead($sIniLocalization, $LangSection, "CurrentName", "Current Name")
+	$strNewFilename = IniRead($sIniLocalization, $LangSection, "NewName", "New Name")
+	$strPlayStore = IniRead($sIniLocalization, $LangSection, "PlayStore", "Play Store")
+	$strRename = IniRead($sIniLocalization, $LangSection, "RenameFile", "Rename File")
+	$strExit = IniRead($sIniLocalization, $LangSection, "Exit", "Exit")
+	$strRenameAPK = IniRead($sIniLocalization, $LangSection, "RenameAPKFile", "Rename APK File")
+	$strNewName = IniRead($sIniLocalization, $LangSection, "NewAPKFilename", "New APK Filename")
+	$strError = IniRead($sIniLocalization, $LangSection, "Error", "Error!")
+	$strRenameFail = IniRead($sIniLocalization, $LangSection, "RenameFail", "APK File could not be renamed.")
+	$strSelectAPK = IniRead($sIniLocalization, $LangSection, "SelectAPKFile", "Select APK file")
+	$strCurDev = IniRead($sIniLocalization, $LangSection, "CurDev", "Cur_Dev")
+	$strCurDevBuild = IniRead($sIniLocalization, $LangSection, "CurDevBuild", "Current Dev. Build")
+	$strUnknown = IniRead($sIniLocalization, $LangSection, "Unknown", "Unknown")
+	$strABIs = IniRead($sIniLocalization, $LangSection, "ABIs", "ABIs")
+	$strSignature = IniRead($sIniLocalization, $LangSection, "Signature", "Signature")
+	$strIcon = IniRead($sIniLocalization, $LangSection, "Icon", "Icon")
+	$strLoading = IniRead($sIniLocalization, $LangSection, "Loading", "Loading")
+	$strTextures = IniRead($sIniLocalization, $LangSection, "Textures", "Textures")
+	$strHash = IniRead($sIniLocalization, $LangSection, "Hash", "Hash")
+	$strInstall = IniRead($sIniLocalization, $LangSection, "Install", "Install")
+	$strUninstall = IniRead($sIniLocalization, $LangSection, "Uninstall", "Uninstall")
+	$strLocales = IniRead($sIniLocalization, $LangSection, "Locales", "Locales")
+	$strClose = IniRead($sIniLocalization, $LangSection, "Close", "Close")
+	$strNoAdbDevices = IniRead($sIniLocalization, $LangSection, "NoAdbDevicesFound", "No ADB devices found.")
+	$strMinMaxSDK = IniRead($sIniLocalization, $LangSection, "MinMaxSDK", "Min. / Max. SDK")
+	$strMaxSDK = IniRead($sIniLocalization, $LangSection, "MaxSDK", "Max. SDK")
+	$strTargetCompileSDK = IniRead($sIniLocalization, $LangSection, "TargetCompileSDK", "Target / Compile SDK")
+	$strCompileSDK = IniRead($sIniLocalization, $LangSection, "CompileSDK", "Compile SDK")
+	$strLanguage = IniRead($sIniLocalization, $LangSection, "Language", "Language")
+	$strSupport = IniRead($sIniLocalization, $LangSection, "Support", "Support")
+	$strDebuggable = IniRead($sIniLocalization, $LangSection, "Debuggable", "Debuggable")
+	$strLabelInLocales = IniRead($sIniLocalization, $LangSection, "LabelInLocales", "Application name in different locales")
+	$strNewVersionIsAvailable = IniRead($sIniLocalization, $LangSection, "NewVersionIsAvailable", "A new version is available")
+	$strNoNewVersionIsAvailable = IniRead($sIniLocalization, $LangSection, "NoNewVersionIsAvailable", "Up to date")
+	$strMoreUpToDate = IniRead($sIniLocalization, $LangSection, "MoreUpToDate", "Your version is more up to date")
+	$strTextInformation = IniRead($sIniLocalization, $LangSection, "TextInformation", "Text information")
+	$strLoadSignature = IniRead($sIniLocalization, $LangSection, "LoadSignature", "Load signature")
+	$strStart = IniRead($sIniLocalization, $LangSection, "Start", "Start")
+	$strExceededTimeout = IniRead($sIniLocalization, $LangSection, "ExceededTimeout", "Exceeded timeout response from the command")
+	$strCheckUpdate = IniRead($sIniLocalization, $LangSection, "CheckUpdate", "Check update")
+	$strYes = IniRead($sIniLocalization, $LangSection, "Yes", "Yes")
+	$strNo = IniRead($sIniLocalization, $LangSection, "No", "No")
+	$strNotFound = IniRead($sIniLocalization, $LangSection, "NotFound", "Not found")
+	$strNoUpdatesFound = IniRead($sIniLocalization, $LangSection, "NoUpdatesFound", "No updates found")
+	$strNeedJava = IniRead($sIniLocalization, $LangSection, "NeedJava", 'Need Java 1.8 or higher.')
+	$strErrorTitle = IniRead($sIniLocalization, $LangSection, "ErrorTitle", 'Error')
+	$strExtractAPKSError = IniRead($sIniLocalization, $LangSection, "ExtractAPKSError", 'There was an error extracting the APKS file')
+	$strGettingContentAPKSError = IniRead($sIniLocalization, $LangSection, "GettingContentAPKSError", 'There was an error getting the contents of the APKS file')
+	$strRenFileAlreadyExistsMsg = IniRead($sIniLocalization, $LangSection, "RenFileAlreadyExistsMsg", 'The output file already exists, please enter a new name')
+	$strUknownValueMsg = IniRead($sIniLocalization, $LangSection, "UknownValueMsg", 'The specified value for the following option is invalid:')
+
+	$strUses = IniRead($sIniLocalization, $LangSection, "Uses", "uses")
+	$strImplied = IniRead($sIniLocalization, $LangSection, "Implied", "implied")
+	$strNotRequired = IniRead($sIniLocalization, $LangSection, "NotRequired", "not required")
+	$strOthers = IniRead($sIniLocalization, $LangSection, "Others", "others")
+
+	$URLPlayStore = IniRead($sIniLocalization, $LangSection, "URLPlaystore", "https://play.google.com/store/apps/details?id=")
+
+	$PlayStoreLanguage = IniRead($sIniLocalization, $LangSection, "PlayStoreLanguage", $Language_code)
+EndFunc   ;==>readLocalization
+
+Func readLastState(ByRef $LastTop, ByRef $LastLeft, ByRef $LastWidth, ByRef $LastHeight)
+	$LastFolder = IniRead($sLastState, "State", "LastFolder", @WorkingDir)
+
+	$LastTop = IniRead($sLastState, "State", "LastTop", 0)
+	$LastLeft = IniRead($sLastState, "State", "LastLeft", 0)
+	$LastWidth = IniRead($sLastState, "State", "LastWidth", 0)
+	$LastHeight = IniRead($sLastState, "State", "LastHeight", 0)
+EndFunc   ;==>readLastState
