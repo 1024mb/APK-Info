@@ -1,3 +1,14 @@
+*** 1.37
+- Added support for auto-rename without prompting for new name.
+- Added support to use Shift while clicking the rename button to either ask or skip the new name prompt based on the RenameWithoutPrompt configuration.
+- Fix word discard with KeepWords.
+- Drop usage of banners as icons.
+- Added support for aapt2 compiled packages.
+- New dependency: aapt2.
+- Fix Play Store version check & comparison.
+- Added support for no version info on APKPure.
+- Added some new strings.
+
 *** 1.36.3
 
 - Improved batch files for shell integration.
@@ -26,7 +37,6 @@
 - Added option to always check for application updates.
 - Added option to keep words from original filename when renaming.
 - Added function to show error messages.
-
 
 *** APK-Info 1.35 (03.07.2019)
 
