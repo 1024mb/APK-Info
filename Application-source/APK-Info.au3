@@ -2165,14 +2165,17 @@ Func _checkUpdate()
 	ProgressOn($strCheckUpdate, $strPlayStore, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
 	$out = $strPlayStore & ':' & @CRLF
 	$url1 = $playStoreUrl & $apk_PkgName
-	$foo = _Run($strPlayStore, $sCurlPath & ' -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url1 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	$foo = _RunWait($strPlayStore, $sCurlPath & ' -s -k --ssl-no-revoke -L -o "' & $tempPath & '\playstore_out.html" "' & $url1 & '"')
 
 	ProgressSet(20)
-	$output = _readAll($foo, $strPlayStore)
+	Local $sHTMLContent = ""
+	$sHTMLContent = FileRead($tempPath & "\playstore_out.html")
+	$ver = StringRegExp($sHTMLContent, 'about how developers declare collection.+?,\[\[\["([^"]+)".+', $STR_REGEXPARRAYMATCH)
+	If @error == 1 Then
+		$ver = StringRegExp($sHTMLContent, 'This app may collect these data types.+?\[\[\["([^"]+)".+', $STR_REGEXPARRAYMATCH)
+	EndIf
 	ProgressSet(30)
-	;MsgBox(0, $url1, $output)
-	$ver = StringRegExp($output, 'Current Version</div><span .*?>([^<]*?)</span></div>', $STR_REGEXPARRAYMATCH)
-	If @error == 0 Then
+	If IsArray($ver) Then
 		$ver = StringStripWS($ver[0], $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		If $ver <> $apk_Version And $ver <> 'Varies with device' Then
 
@@ -2208,8 +2211,8 @@ Func _checkUpdate()
 			EndIf
 		EndIf
 	Else
-		$ver = 'error: ' & @error
-		If StringInStr($output, '<title>Not Found</title>') Then
+		$ver = 'error'
+		If StringInStr($sHTMLContent, "We're sorry, the requested URL was not found on this server.") Then
 			$ver = $strNotFound
 		EndIf
 	EndIf
