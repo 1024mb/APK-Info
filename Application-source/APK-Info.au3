@@ -223,6 +223,8 @@ $rightColumnStart = $inputStart + $inputWidth + 5
 Local $fields = 11
 If $ShowHash <> '' Then $fields += 1
 
+ProgressSet(30)
+
 $INFO_LBL = 0
 $INFO_BTN = 1
 
@@ -287,6 +289,8 @@ GUICtrlSetResizing(-1, $GUI_DOCKHEIGHT + $GUI_DOCKWIDTH + $GUI_DOCKRIGHT + $GUI_
 GUICtrlSetState(-1, $globalInputStyle)
 GUICtrlSetTip(-1, $strMaxSDK)
 $inpMinSDK = _makeField($strMinMaxSDK, 0, $inputWidth - 5 - $halfWidth)
+
+ProgressSet(55)
 
 _makeLangLabel($strLanguage & ': ' & $Language_code)
 $inpCompileSDK = GUICtrlCreateInput('', $inputStart + $inputWidth - $halfWidth, $offsetHeight, $halfWidth, $inputHeight, $inputFlags)
@@ -377,6 +381,8 @@ $gBtn_Exit = _makeButton($strExit, "exit.bmp")
 
 $gSelAll = _initSelAll($hGUI)
 
+ProgressSet(75)
+
 _GDIPlus_Startup()
 $hGraphic = _GDIPlus_GraphicsCreateFromHWND($hGUI)
 
@@ -439,6 +445,8 @@ EndIf
 
 _OnShow()
 _saveGUIPos()
+
+ProgressSet(100)
 
 ProgressOff()
 
@@ -1154,6 +1162,7 @@ EndFunc   ;==>_ReplacePlaceholders
 
 Func _Run($label, $cmd, $options)
 	ProgressSet(0, $label & '...')
+	ProgressSet(30, $label & '...') ; to make it feel like it's actually progressing and not stuck here as there are cases when some operations take several seconds to complete.
 	$process = Run(_FixCmd($cmd), $ScriptDir, @SW_HIDE, $options)
 	ProgressSet(100, $label & '... OK')
 	Return $process
@@ -1186,11 +1195,13 @@ EndFunc   ;==>_RunWait
 Func _LoadSignature()
 	If $apk_Signature == '' Then
 		ProgressOn($strLoading & "...", $strSignature, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
+		ProgressSet(30)
 		If $bIsAPKS Then
 			_getSignature($sAPKSTempPath & '\base.apk', 1)
 		Else
 			_getSignature($fullPathAPK, 1)
 		EndIf
+		ProgressSet(100)
 		ProgressOff()
 		GUICtrlSetData($edtSignature, $apk_Signature)
 	EndIf
@@ -2010,6 +2021,7 @@ Func _adb()
 
 	$title = $parts[0]
 	ProgressOn($title, $strLoading, '', -1, -1, $DLG_NOTONTOP + $DLG_MOVEABLE)
+	ProgressSet(30)
 
 	$output = ''
 	$timer = TimerInit()
@@ -2046,6 +2058,7 @@ Func _adb()
 		ProcessClose($foo)
 	Next
 
+	ProgressSet(100)
 	ProgressOff()
 
 	$lines = _StringExplode(StringStripWS($output, $STR_STRIPLEADING + $STR_STRIPTRAILING), @CRLF)
