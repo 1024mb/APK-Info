@@ -1,3 +1,7 @@
+*** 1.38
+- Improved Play Store app version extraction.
+- Some UI improvements.
+
 *** 1.37
 - Added support for auto-rename without prompting for new name.
 - Added support to use Shift while clicking the rename button to either ask or skip the new name prompt based on the RenameWithoutPrompt configuration.
