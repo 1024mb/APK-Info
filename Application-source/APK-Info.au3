@@ -1187,6 +1187,7 @@ EndFunc   ;==>_RunWait
 
 Func _RunWait($label, $cmd)
 	ProgressSet(0, $label & '...')
+	ProgressSet(30)
 	$ret = RunWait(_FixCmd($cmd), $ScriptDir, @SW_HIDE)
 	ProgressSet(100, $label & '... OK')
 	Return $ret
