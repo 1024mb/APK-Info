@@ -2178,37 +2178,7 @@ Func _checkUpdate()
 	If IsArray($ver) Then
 		$ver = StringStripWS($ver[0], $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		If $ver <> 'Varies with device' Then
-
-			Local $aiOnlineVersion = StringSplit($ver, ".")
-			Local $aiAPKVersion = StringSplit($apk_Version, ".")
-
-			Local $iLengthOnlineVersion = UBound($aiOnlineVersion)
-			Local $iLengthAPKVersion = UBound($aiAPKVersion)
-
-			$iOnlineVersion = StringReplace($ver, ".", "")
-			$iAPKVersion = StringReplace($apk_Version, ".", "")
-
-			If $iLengthOnlineVersion > $iLengthAPKVersion Then
-				Local $iDiff = $iLengthOnlineVersion - $iLengthAPKVersion
-				While $iDiff > 0
-					$iAPKVersion *= 10
-					$iDiff -= 1
-				WEnd
-			ElseIf $iLengthAPKVersion > $iLengthOnlineVersion Then
-				Local $iDiff = $iLengthAPKVersion - $iLengthOnlineVersion
-				While $iDiff > 0
-					$iOnlineVersion *= 10
-					$iDiff -= 1
-				WEnd
-			EndIf
-
-			If $iOnlineVersion > $iAPKVersion Then
-				$ver = $ver & '   <--- ' & $strNewVersionIsAvailable
-			ElseIf $iOnlineVersion == $iAPKVersion Then
-				$ver = $ver & '   <--- ' & $strNoNewVersionIsAvailable
-			Else
-				$ver = $ver & '   <--- ' & $strMoreUpToDate
-			EndIf
+			$ver = compareVersions($ver)
 		EndIf
 	Else
 		$ver = $strVersionVaries
@@ -2231,36 +2201,7 @@ Func _checkUpdate()
 	If @error == 0 Then
 		$ver = StringStripWS($ver[0], $STR_STRIPLEADING + $STR_STRIPTRAILING)
 		If $ver <> "" Then
-			Local $aiOnlineVersion = StringSplit($ver, ".")
-			Local $aiAPKVersion = StringSplit($apk_Version, ".")
-
-			Local $iLengthOnlineVersion = UBound($aiOnlineVersion)
-			Local $iLengthAPKVersion = UBound($aiAPKVersion)
-
-			$iOnlineVersion = StringReplace($ver, ".", "")
-			$iAPKVersion = StringReplace($apk_Version, ".", "")
-
-			If $iLengthOnlineVersion > $iLengthAPKVersion Then
-				Local $iDiff = $iLengthOnlineVersion - $iLengthAPKVersion
-				While $iDiff > 0
-					$iAPKVersion *= 10
-					$iDiff -= 1
-				WEnd
-			ElseIf $iLengthAPKVersion > $iLengthOnlineVersion Then
-				Local $iDiff = $iLengthAPKVersion - $iLengthOnlineVersion
-				While $iDiff > 0
-					$iOnlineVersion *= 10
-					$iDiff -= 1
-				WEnd
-			EndIf
-
-			If $iOnlineVersion > $iAPKVersion Then
-				$ver = $ver & '   <--- ' & $strNewVersionIsAvailable
-			ElseIf $iOnlineVersion == $iAPKVersion Then
-				$ver = $ver & '   <--- ' & $strNoNewVersionIsAvailable
-			Else
-				$ver = $ver & '   <--- ' & $strMoreUpToDate
-			EndIf
+			$ver = compareVersions($ver)
 		Else
 			$ver = $strNoVersionFound
 		EndIf
@@ -2473,3 +2414,60 @@ Func readLastState(ByRef $LastTop, ByRef $LastLeft, ByRef $LastWidth, ByRef $Las
 	$LastWidth = IniRead($sLastState, "State", "LastWidth", 0)
 	$LastHeight = IniRead($sLastState, "State", "LastHeight", 0)
 EndFunc   ;==>readLastState
+
+Func compareVersions($ver)
+	Local $aiOnlineVersion = StringSplit($ver, ".")
+	Local $aiAPKVersion = StringSplit($apk_Version, ".")
+
+	$iOnlineVersion = Number(StringReplace($ver, ".", ""))
+	$iAPKVersion = Number(StringReplace($apk_Version, ".", ""))
+
+	$aiOnlineVersionDummy = $aiOnlineVersion
+	$iArrayNum = 0
+	For $sNum In $aiOnlineVersionDummy
+		$sNum2 = $sNum
+		While(StringLeft($sNum2, 1) == 0 And StringLen($sNum2) > 1)
+			$sNum2 = StringRight($sNum2, StringLen($sNum2) - 1)
+		WEnd
+		$aiOnlineVersion[$iArrayNum] = $sNum2
+		$iArrayNum += 1
+	Next
+
+	$aiAPKVersionDummy = $aiAPKVersion
+	$iArrayNum = 0
+	For $sNum In $aiAPKVersionDummy
+		$sNum2 = $sNum
+		While(StringLeft($sNum2, 1) == 0 And StringLen($sNum2) > 1)
+			$sNum2 = StringRight($sNum2, StringLen($sNum2) - 1)
+		WEnd
+		$aiAPKVersion[$iArrayNum] = $sNum2
+		$iArrayNum += 1
+	Next
+
+	Local $iLengthOnlineVersion = UBound($aiOnlineVersion)
+	Local $iLengthAPKVersion = UBound($aiAPKVersion)
+
+	If $iLengthOnlineVersion > $iLengthAPKVersion Then
+		Local $iDiff = $iLengthOnlineVersion - $iLengthAPKVersion
+		While $iDiff > 0
+			$iAPKVersion *= 10
+			$iDiff -= 1
+		WEnd
+	ElseIf $iLengthAPKVersion > $iLengthOnlineVersion Then
+		Local $iDiff = $iLengthAPKVersion - $iLengthOnlineVersion
+		While $iDiff > 0
+			$iOnlineVersion *= 10
+			$iDiff -= 1
+		WEnd
+	EndIf
+
+	If $iOnlineVersion > $iAPKVersion Then
+		$ver = $ver & '   <--- ' & $strNewVersionIsAvailable
+	ElseIf $iOnlineVersion == $iAPKVersion Then
+		$ver = $ver & '   <--- ' & $strNoNewVersionIsAvailable
+	Else
+		$ver = $ver & '   <--- ' & $strMoreUpToDate
+	EndIf
+
+	return $ver
+EndFunc   ;==>compareVersions
