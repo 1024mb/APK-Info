@@ -161,7 +161,7 @@ Global $LastFolder = @WorkingDir
 
 readLastState($LastTop, $LastLeft, $LastWidth, $LastHeight)
 
-Local $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible, $strLoadingFile
+Local $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible, $strLoadingFile, $strNotFoundTools
 
 Local $LangSection = "Strings-" & $Language_code
 
@@ -179,7 +179,9 @@ $playStoreUrl = "https://play.google.com/store/apps/details?hl=en&id="
 $apkPureUrl = "https://apkpure.com/apk-info/"
 $strApkPure = "APKPure"
 
-readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible, $strLoadingFile)
+readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible, $strLoadingFile, $strNotFoundTools)
+
+setToolsPath()
 
 Dim $sMinAndroidString, $sTgtAndroidString
 
@@ -2255,46 +2257,102 @@ Func showErrorMsg($sConfigOptionLabel)
 EndFunc   ;==>showErrorMsg
 
 Func setToolsPath()
-	If RunWait('WHERE /Q adb.exe', @WindowsDir, @SW_HIDE) == 0 Then
-		$sADBPath = 'adb'
-	Else
+
+	Local $sPathEnv = EnvGet("PATH")
+	Local $aPathEnv = StringSplit($sPathEnv, ";", $STR_NOCOUNT)
+
+	Local $bADBFound = False, $bCURLFound = False, $bAPKSignerFound = False, $bSevenZipFound = False, $bAaptFound = False, $bAapt2Found = False, $bMagickFound = False
+
+	For $sPathItem In $aPathEnv
+		If $bADBFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\adb.exe") Then
+			$sADBPath = 'adb'
+			$bADBFound = True
+		EndIf
+
+		If $bCURLFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\curl.exe") Then
+			$sCurlPath = 'curl'
+			$bCURLFound = True
+		EndIf
+		
+		If $bAPKSignerFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\apksigner.bat") Then
+			$sAPKSignerPath = 'apksigner'
+			$bAPKSignerFound = True
+		EndIf
+		
+		If $bSevenZipFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\7z.exe") Then
+			$sSevenZipPath = '7z'
+			$bSevenZipFound = True
+		EndIf
+		
+		If $bAaptFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\aapt.exe") Then
+			$sAaptPath = 'aapt'
+			$bAaptFound = True
+		EndIf
+		
+		If $bAapt2Found == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\aapt2.exe") Then
+			$sAapt2Path = 'aapt2'
+			$bAapt2Found = True
+		EndIf
+		
+		If $bMagickFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\magick.exe") Then
+			$sMagickPath = 'magick'
+			$bMagickFound = True
+		EndIf
+	Next
+
+	Local $sNotFoundTools = ""
+
+	If Not $bADBFound Then
 		$sADBPath = '"' & $toolsDir & 'adb.exe"'
+		If Not FileExists($toolsDir & 'adb.exe') Then
+			$sNotFoundTools &= "adb.exe" & @CRLF
+		EndIf
 	EndIf
-	
-	If RunWait('WHERE /Q curl.exe', @WindowsDir, @SW_HIDE) == 0 Then
-		$sCurlPath = 'curl'
-	Else
+
+	If Not $bCURLFound Then
 		$sCurlPath = '"' & $toolsDir & 'curl.exe"'
+		If Not FileExists($toolsDir & 'curl.exe') Then
+			$sNotFoundTools &= "curl.exe" & @CRLF
+		EndIf
 	EndIf
 	
-	If RunWait('WHERE /Q apksigner.bat', @WindowsDir, @SW_HIDE) == 0 Then
-		$sAPKSignerPath = 'apksigner'
-	Else
+	If Not $bAPKSignerFound Then
 		$sAPKSignerPath = '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar"'
+		If Not FileExists($toolsDir & 'apksigner.jar') Then
+			$sNotFoundTools &= "apksigner.bat" & @CRLF & "apksigner.jar" & @CRLF
+		EndIf
 	EndIf
 	
-	If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
-		$sSevenZipPath = '7z'
-	Else
+	If Not $bSevenZipFound Then
 		$sSevenZipPath = '"' & $toolsDir & '7z.exe"'
+		If Not FileExists($toolsDir & '7z.exe') Then
+			$sNotFoundTools &= "7z.exe" & @CRLF
+		EndIf
 	EndIf
 	
-	If RunWait('WHERE /Q aapt.exe', @WindowsDir, @SW_HIDE) == 0 Then
-		$sAaptPath = 'aapt'
-	Else
+	If Not $bAaptFound Then
 		$sAaptPath = '"' & $toolsDir & 'aapt.exe"'
+		If Not FileExists($toolsDir & 'aapt.exe') Then
+			$sNotFoundTools &= "aapt.exe" & @CRLF
+		EndIf
 	EndIf
 	
-	If RunWait('WHERE /Q aapt2.exe', @WindowsDir, @SW_HIDE) == 0 Then
-		$sAapt2Path = 'aapt2'
-	Else
+	If Not $bAapt2Found Then
 		$sAapt2Path = '"' & $toolsDir & 'aapt2.exe"'
+		If Not FileExists($toolsDir & 'aapt2.exe') Then
+			$sNotFoundTools &= "aapt2.exe" & @CRLF
+		EndIf
 	EndIf
 	
-	If RunWait('WHERE /Q magick.exe', @WindowsDir, @SW_HIDE) == 0 Then
-		$sMagickPath = 'magick'
-	Else
+	If Not $bMagickFound Then
 		$sMagickPath = '"' & $toolsDir & 'convert.exe"'
+		If Not FileExists($toolsDir & 'convert.exe') Then
+			$sNotFoundTools &= "magick.exe" & @CRLF & "convert.exe"
+		EndIf
+	EndIf
+
+	If $sNotFoundTools <> "" Then
+		showToolNotFoundMsg($sNotFoundTools)
 	EndIf
 EndFunc   ;==>setToolsPath
 
@@ -2325,8 +2383,6 @@ Func readSettings(ByRef $ForcedGUILanguage, ByRef $OSLanguageCode, ByRef $Langua
 	$ShowLangCode = _readSettings("ShowLangCode", "1")
 	$keepWords = _readSettings("KeepWords", "0")
 
-	setToolsPath()
-
 	If $keepWords == 1 Then
 		$keepWordsList = _readSettings("KeepWordsList", "")
 		$keepWordsEncloseChars = _readSettings("KeepWordsEncloseChars", "")
@@ -2344,7 +2400,7 @@ Func readSettings(ByRef $ForcedGUILanguage, ByRef $OSLanguageCode, ByRef $Langua
 	EndIf
 EndFunc   ;==>readSettings
 
-Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSection, ByRef $strLabel, ByRef $strVersion, ByRef $strBuild, ByRef $strPkg, ByRef $strScreens, ByRef $strDensities, ByRef $strPermissions, ByRef $strFeatures, ByRef $strFilename, ByRef $strNewFilename, ByRef $strPlayStore, ByRef $strRename, ByRef $strExit, ByRef $strRenameAPK, ByRef $strNewName, ByRef $strError, ByRef $strRenameFail, ByRef $strSelectAPK, ByRef $strCurDev, ByRef $strCurDevBuild, ByRef $strUnknown, ByRef $strABIs, ByRef $strSignature, ByRef $strIcon, ByRef $strLoading, ByRef $strTextures, ByRef $strHash, ByRef $strInstall, ByRef $strUninstall, ByRef $strLocales, ByRef $strClose, ByRef $strNoAdbDevices, ByRef $strMinMaxSDK, ByRef $strMaxSDK, ByRef $strTargetCompileSDK, ByRef $strCompileSDK, ByRef $strLanguage, ByRef $strSupport, ByRef $strDebuggable, ByRef $strLabelInLocales, ByRef $strNewVersionIsAvailable, ByRef $strNoNewVersionIsAvailable, ByRef $strMoreUpToDate, ByRef $strTextInformation, ByRef $strLoadSignature, ByRef $strStart, ByRef $strExceededTimeout, ByRef $strCheckUpdate, ByRef $strYes, ByRef $strNo, ByRef $strNotFound, ByRef $strNoUpdatesFound, ByRef $strNeedJava, ByRef $strErrorTitle, ByRef $strExtractAPKSError, ByRef $strGettingContentAPKSError, ByRef $strRenFileAlreadyExistsMsg, ByRef $strUknownValueMsg, ByRef $strUses, ByRef $strImplied, ByRef $strNotRequired, ByRef $strOthers, ByRef $URLPlayStore, ByRef $PlayStoreLanguage, ByRef $strVersionVaries, ByRef $strNoVersionFound, ByRef $strUpdateCheckingNotPossible, ByRef $strLoadingFile)
+Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSection, ByRef $strLabel, ByRef $strVersion, ByRef $strBuild, ByRef $strPkg, ByRef $strScreens, ByRef $strDensities, ByRef $strPermissions, ByRef $strFeatures, ByRef $strFilename, ByRef $strNewFilename, ByRef $strPlayStore, ByRef $strRename, ByRef $strExit, ByRef $strRenameAPK, ByRef $strNewName, ByRef $strError, ByRef $strRenameFail, ByRef $strSelectAPK, ByRef $strCurDev, ByRef $strCurDevBuild, ByRef $strUnknown, ByRef $strABIs, ByRef $strSignature, ByRef $strIcon, ByRef $strLoading, ByRef $strTextures, ByRef $strHash, ByRef $strInstall, ByRef $strUninstall, ByRef $strLocales, ByRef $strClose, ByRef $strNoAdbDevices, ByRef $strMinMaxSDK, ByRef $strMaxSDK, ByRef $strTargetCompileSDK, ByRef $strCompileSDK, ByRef $strLanguage, ByRef $strSupport, ByRef $strDebuggable, ByRef $strLabelInLocales, ByRef $strNewVersionIsAvailable, ByRef $strNoNewVersionIsAvailable, ByRef $strMoreUpToDate, ByRef $strTextInformation, ByRef $strLoadSignature, ByRef $strStart, ByRef $strExceededTimeout, ByRef $strCheckUpdate, ByRef $strYes, ByRef $strNo, ByRef $strNotFound, ByRef $strNoUpdatesFound, ByRef $strNeedJava, ByRef $strErrorTitle, ByRef $strExtractAPKSError, ByRef $strGettingContentAPKSError, ByRef $strRenFileAlreadyExistsMsg, ByRef $strUknownValueMsg, ByRef $strUses, ByRef $strImplied, ByRef $strNotRequired, ByRef $strOthers, ByRef $URLPlayStore, ByRef $PlayStoreLanguage, ByRef $strVersionVaries, ByRef $strNoVersionFound, ByRef $strUpdateCheckingNotPossible, ByRef $strLoadingFile, ByRef $strNotFoundTools)
 	$strLabel = IniRead($sIniLocalization, $LangSection, "Application", "Application")
 	$strVersion = IniRead($sIniLocalization, $LangSection, "Version", "Version")
 	$strBuild = IniRead($sIniLocalization, $LangSection, "Build", "Build")
@@ -2417,6 +2473,7 @@ Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSectio
 	$strNoVersionFound = IniRead($sIniLocalization, $LangSection, "NoVersionFound", "Version information not found.")
 	$strUpdateCheckingNotPossible = IniRead($sIniLocalization, $LangSection, "UpdateCheckingNotPossible", "New version checking is not possible.")
 	$strLoadingFile = IniRead($sIniLocalization, $LangSection, "LoadingFile", "Loading file...")
+	$strNotFoundTools = IniRead($sIniLocalization, $LangSection, "NotFoundTools", "These tools weren't found either in your Path environment or 'tools' directory:")
 EndFunc   ;==>readLocalization
 
 Func readLastState(ByRef $LastTop, ByRef $LastLeft, ByRef $LastWidth, ByRef $LastHeight)
@@ -2484,3 +2541,14 @@ Func compareVersions($ver)
 
 	return $ver
 EndFunc   ;==>compareVersions
+
+Func showToolNotFoundMsg($sNotFoundTools)
+	Local $btnPressed = MsgBox($MB_OKCANCEL + $MB_TOPMOST + $MB_ICONERROR + $MB_DEFBUTTON2, $strErrorTitle, $strNotFoundTools & @CRLF & @CRLF & $sNotFoundTools)
+	If $btnPressed == $IDCANCEL Then
+		Exit 1
+	ElseIf StringInStr($sNotFoundTools, "aapt.exe") And StringInStr($sNotFoundTools, "aapt2.exe") Then
+		Exit 1
+	ElseIf StringInStr($sNotFoundTools, "7z.exe") Then
+		Exit 1
+	EndIf
+EndFunc   ;==>showToolNotFoundMsg
