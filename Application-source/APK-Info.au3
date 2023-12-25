@@ -576,7 +576,7 @@ Func _promptRename($strRenameAPK, $strNewName, $sNewFilenameAPK)
 	$sNewNameInput = InputBox($strRenameAPK, $strNewName, $sNewFilenameAPK, "", $width, $height, $pos[0] + ($pos[2] - $width) / 2, $pos[1] + ($pos[3] - $height) / 2, $hGUI)
 	If Not @error Then
 		If $fileAPK <> $sNewNameInput And FileExists($dirAPK & '\' & $sNewNameInput) Then
-			MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strRenFileAlreadyExistsMsg)
+			MsgBox($MB_OK + $MB_TOPMOST + $MB_ICONERROR, $strErrorTitle, $strRenFileAlreadyExistsMsg)
 			$sNewNameInput = _promptRename($strRenameAPK, $strNewName, $sNewNameInput)
 		EndIf
 	EndIf
@@ -797,16 +797,9 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 		If StringRegExp($prmFilename, '(?i)\.apks$') Then
 			$bIsAPKS = True
 			$sAPKSTempPath = $tempPath & '\' & StringRegExpReplace(_SplitPath($prmFilename, False), '(?i)\.apks$', "")
-			If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
-				If RunWait('7z e -o"' & $tempPath & '\*' & '" -y "' & $prmFilename & '"', "", @SW_HIDE) <> 0 Then
-					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
-					Exit 0
-				EndIf
-			Else
-				If RunWait('"' & @ScriptDir & '\tools\7z.exe" e -o"' & $tempPath & '\*' & '" -y "' & $prmFilename & '"', "", @SW_HIDE) <> 0 Then
-					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
-					Exit 0
-				EndIf
+			If RunWait($sSevenZipPath & ' e -o"' & $tempPath & '\*' & '" -y "' & $prmFilename & '"', "", @SW_HIDE) <> 0 Then
+				MsgBox($MB_OK + $MB_TOPMOST + $MB_ICONERROR, $strErrorTitle, $strExtractAPKSError)
+				Exit 0
 			EndIf
 		EndIf
 		Return $prmFilename
@@ -827,13 +820,8 @@ Func _checkFileParameter($prmFilename, $bProgramStart = False)
 		If StringRegExp($f_Sel, '(?i)\.apks$') Then
 			$bIsAPKS = True
 			$sAPKSTempPath = $tempPath & '\' & StringRegExpReplace(_SplitPath($f_Sel, False), '(?i)\.apks$', "")
-			If RunWait('WHERE /Q 7z.exe', @WindowsDir, @SW_HIDE) == 0 Then
-				If RunWait('7z e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
-					MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
-					Exit 1
-				EndIf
-			ElseIf RunWait('"' & @ScriptDir & '\tools\7z.exe" e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
-				MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strExtractAPKSError)
+			If RunWait($sSevenZipPath & ' e -o"' & $tempPath & '\*' & '" -y "' & $f_Sel & '"', "", @SW_HIDE) <> 0 Then
+				MsgBox($MB_OK + $MB_TOPMOST + $MB_ICONERROR, $strErrorTitle, $strExtractAPKSError)
 				Exit 1
 			EndIf
 		EndIf
@@ -871,7 +859,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	If $bIsAPKS Then
 		$aAPKSContent = _FileListToArray($sAPKSTempPath, "*.apk", $FLTA_FILES, True)
 		If @error Then
-			MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strGettingContentAPKSError)
+			MsgBox($MB_OK + $MB_TOPMOST + $MB_ICONERROR, $strErrorTitle, $strGettingContentAPKSError)
 			Exit 1
 		EndIf
 	EndIf
@@ -2232,14 +2220,23 @@ Func _checkUpdate()
 		$out = $strNoUpdatesFound & @CRLF & @CRLF & $out
 	EndIf
 
+	Local $bVersionCheckSuccess = True
+
 	If StringInStr($out, $strVersionVaries) And StringInStr($out, $strNoVersionFound) Then
 		$out = $strUpdateCheckingNotPossible & @CRLF & @CRLF & $out
+		$bVersionCheckSuccess = False
 	EndIf
 
 	$out = $out & @CRLF & $strYes & ' = ' & $strPlayStore & @CRLF & $strNo & ' = ' & $strApkPure
 
+	ProgressSet(100)
 	ProgressOff()
-	$ret = MsgBox($MB_ICONINFORMATION + $MB_YESNOCANCEL, $strCheckUpdate, $out)
+	If $bVersionCheckSuccess Then
+		$ret = MsgBox($MB_ICONINFORMATION + $MB_YESNOCANCEL + $MB_DEFBUTTON3, $strCheckUpdate, $out)
+	Else
+		$ret = MsgBox($MB_ICONWARNING + $MB_YESNOCANCEL + $MB_DEFBUTTON3, $strCheckUpdate, $out)
+	EndIf
+
 	If $ret == $IDYES Then ShellExecute($URLPlayStore & $apk_PkgName & '&hl=' & $PlayStoreLanguage)
 	If $ret == $IDNO Then ShellExecute($url2)
 EndFunc   ;==>_checkUpdate
@@ -2254,7 +2251,7 @@ Func _Lib_IntToFloat($iInt)
 EndFunc   ;==>_Lib_IntToFloat
 
 Func showErrorMsg($sConfigOptionLabel)
-	MsgBox($MB_OK + $MB_TOPMOST, $strErrorTitle, $strUknownValueMsg & @CRLF & @CRLF & $sConfigOptionLabel)
+	MsgBox($MB_OK + $MB_TOPMOST + $MB_ICONERROR, $strErrorTitle, $strUknownValueMsg & @CRLF & @CRLF & $sConfigOptionLabel)
 EndFunc   ;==>showErrorMsg
 
 Func setToolsPath()
