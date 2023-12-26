@@ -2175,9 +2175,13 @@ Func _checkUpdate()
 	ProgressSet(20)
 	Local $sHTMLContent = ""
 	$sHTMLContent = FileRead($tempPath & "\playstore_out.html")
-	$ver = StringRegExp($sHTMLContent, 'about how developers declare collection.+?(?!sideChannel),\[\[\["([0-9][^"]+)".+?\], sideChannel:.+', $STR_REGEXPARRAYMATCH)
+	FileDelete($tempPath & "\playstore_out.html")
+	$ver = StringRegExp($sHTMLContent, '<\/script><script nonce="[^"]+">AF_initDataCallback\(\{key: ''ds:5'', hash: ''9'', data:.+?(?!sideChannel),\[\[\["([0-9][^"]*)".+?\], sideChannel:', $STR_REGEXPARRAYMATCH)
 	If @error == 1 Then
-		$ver = StringRegExp($sHTMLContent, 'This app may collect these data types.+?(?!sideChannel),\[\[\["([0-9][^"]+)".+?\], sideChannel:.+', $STR_REGEXPARRAYMATCH)
+		$ver = StringRegExp($sHTMLContent, 'about how developers declare collection.+?(?!sideChannel),\[\[\["([0-9][^"]*)".+?\], sideChannel', $STR_REGEXPARRAYMATCH)
+		If @error == 1 Then
+			$ver = StringRegExp($sHTMLContent, 'This app may collect these data types.+?(?!sideChannel),\[\[\["([0-9][^"]*)".+?\], sideChannel', $STR_REGEXPARRAYMATCH)
+		EndIf
 	EndIf
 	ProgressSet(30)
 	If IsArray($ver) Then
