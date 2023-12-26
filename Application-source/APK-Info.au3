@@ -925,8 +925,8 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 		$sEncloseCharStart = ""
 		$sEncloseCharEnd = ""
 		If StringLen($keepWordsEncloseChars) == 2 Then
-			$sEncloseCharStart = StringRegExpReplace($keepWordsEncloseChars, "^(.).$", "$1")
-			$sEncloseCharEnd = StringRegExpReplace($keepWordsEncloseChars, "^.(.)$", "$1")
+			$sEncloseCharStart = StringLeft($keepWordsEncloseChars, 1)
+			$sEncloseCharEnd = StringRight($keepWordsEncloseChars, 1)
 		Else
 			showErrorMsg("KeepWordsEncloseChars")
 		EndIf
