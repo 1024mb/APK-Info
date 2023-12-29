@@ -884,13 +884,18 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 
 	_extractIcon()
 
-	ProgressSet(75, $fileAPK, $strSignature & '...')
-
-	If $bIsAPKS Then
-		_getSignature($sAPKSTempPath & '\base.apk', $CheckSignature)
+	If $CheckSignature == 1 Then
+		ProgressSet(75, $fileAPK, $strSignature & '...')
+		If $bIsAPKS Then
+			_getSignature($sAPKSTempPath & '\base.apk', $CheckSignature)
+		Else
+			_getSignature($fullPathAPK, $CheckSignature)
+		EndIf
 	Else
-		_getSignature($fullPathAPK, $CheckSignature)
+		GUICtrlSetState($btnSignatureLoad, $GUI_SHOW)
 	EndIf
+
+	ProgressSet(85, $fileAPK, '...')
 
 	If $bIsAPKS Then
 		$sNewFilenameAPK = _ReplacePlaceholders($FileNamePattern & '.apks')
@@ -990,8 +995,10 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	ElseIf $keepWords <> 0 Then
 		showErrorMsg("KeepWords")
 	EndIf
-
-	$hash = _ReplacePlaceholders($ShowHash)
+	
+	If $ShowHash <> "" Then
+		$hash = _ReplacePlaceholders($ShowHash)
+	EndIf
 
 	If $apk_Labels == '' Then
 		$labels = $GUI_HIDE
