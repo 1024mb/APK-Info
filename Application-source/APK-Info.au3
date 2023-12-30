@@ -2586,13 +2586,13 @@ Func compareVersions($ver)
 		If StringLen($vElement) > StringLen($asAPKVersion[$iArrayNum]) Then
 			Local $iDiff = StringLen($vElement) - StringLen($asAPKVersion[$iArrayNum])
 			While $iDiff > 0
-				$asAPKVersion[$iArrayNum] &= 0
+				$asAPKVersion[$iArrayNum] = "0" & $asAPKVersion[$iArrayNum]
 				$iDiff -= 1
 			WEnd
 		ElseIf StringLen($vElement) < StringLen($asAPKVersion[$iArrayNum]) Then
 			Local $iDiff = StringLen($asAPKVersion[$iArrayNum]) - StringLen($vElement)
 			While $iDiff > 0
-				$asOnlineVersion[$iArrayNum] &= 0
+				$asOnlineVersion[$iArrayNum] = "0" & $asOnlineVersion[$iArrayNum]
 				$iDiff -= 1
 			WEnd
 		EndIf
