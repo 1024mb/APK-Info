@@ -3,9 +3,9 @@
 #AutoIt3Wrapper_Outfile=..\APK-Info.exe
 #AutoIt3Wrapper_Outfile_x64=..\APK-Info_x64.exe
 #AutoIt3Wrapper_Compile_Both=y
-#AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK)
+#AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK/APKS)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.38
+#AutoIt3Wrapper_Res_Fileversion=1.39
 #AutoIt3Wrapper_Res_LegalCopyright=NONE
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #pragma compile(AutoItExecuteAllowed True)
@@ -2555,7 +2555,7 @@ Func compareVersions($ver)
 		EndIf
 	EndIf
 
-	; In case that the difference in the number of delimeters is greater than 1 we should keep adding more zeroes to either one of the arrays
+	; In case that the difference in the number of delimeters is greater than 1 we should keep adding more zeros to either one of the arrays
 
 	Local $iDiffDotNum = $iOnlineVersionDotNum - $iAPKVersionDotNum
 
@@ -2567,7 +2567,7 @@ Func compareVersions($ver)
 		WEnd
 	EndIf
 
-	; In the case of the online version we should start adding zeroes
+	; In the case of the online version we should start adding zeros
 
 	$iDiffDotNum = 0
 	$iDiffDotNum = $iAPKVersionDotNum - $iOnlineVersionDotNum
@@ -2580,7 +2580,7 @@ Func compareVersions($ver)
 		WEnd
 	EndIf
 
-	; Pad numbers with zeroes
+	; Pad numbers with zeros
 
 	For $vElement In $asOnlineVersion
 		If StringLen($vElement) > StringLen($asAPKVersion[$iArrayNum]) Then
