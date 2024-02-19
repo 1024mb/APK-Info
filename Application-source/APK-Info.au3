@@ -176,7 +176,7 @@ $strAdb = 'ADB'
 
 $urlUpdate = 'https://github.com/1024mb/APK-Info/releases/latest'
 $playStoreUrl = "https://play.google.com/store/apps/details?hl=en&id="
-$apkPureUrl = "https://apkpure.com/apk-info/"
+$apkPureUrl = "https://apkpure.net/apk-info/"
 $strApkPure = "APKPure"
 
 readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible, $strLoadingFile, $strNotFoundTools, $strVersionSepDifferTitle, $strVersionSepDifferMsg1, $strVersionSepDifferMsg2)
