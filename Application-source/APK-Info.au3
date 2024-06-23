@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Compile_Both=y
 #AutoIt3Wrapper_Res_Comment=Shows info about Android Package Files (APK/APKS)
 #AutoIt3Wrapper_Res_Description=APK-Info
-#AutoIt3Wrapper_Res_Fileversion=1.39
+#AutoIt3Wrapper_Res_Fileversion=1.40
 #AutoIt3Wrapper_Res_LegalCopyright=NONE
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 #pragma compile(AutoItExecuteAllowed True)
@@ -1169,6 +1169,16 @@ EndFunc   ;==>_Run
 Func _RunBatch($label, $cmd, $name)
 	ProgressSet(0, $label & '...')
 	If $bIsAPKS Then
+		If not FileExists($sAPKSTempPath) Then
+			DirCreate($sAPKSTempPath)
+		EndIf
+	Else
+		If not FileExists($tempPath) Then
+			DirCreate($tempPath)
+		EndIf
+	EndIf
+
+	If $bIsAPKS Then
 		RunWait($cmd & ' > "' & $sAPKSTempPath & '\' & $name & '.txt" 2>&1', $ScriptDir, @SW_HIDE)
 	Else
 		RunWait($cmd & ' > "' & $tempPath & '\' & $name & '.txt" 2>&1', $ScriptDir, @SW_HIDE)
@@ -1209,14 +1219,8 @@ EndFunc   ;==>_LoadSignature
 Func _getSignature($prmAPK, $load)
 	$output = ''
 	If $load == 1 Then
-		_RunBatch('apksigner', @ComSpec & ' /C ' & $sAPKSignerPath & ' verify --v --print-certs "' & $prmAPK & '"', "apksigner")
-		If $bIsAPKS Then
-			$output = FileRead($sAPKSTempPath & '\apksigner.txt')
-			FileDelete($sAPKSTempPath & '\apksigner.txt')
-		Else
-			$output = FileRead($tempPath & '\apksigner.txt')
-			FileDelete($tempPath & '\apksigner.txt')
-		EndIf
+		$process = _Run('apksigner', $sAPKSignerPath & ' verify --v --print-certs "' & $prmAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
+		$output &= StringStripWS(_readAll($process, 'apksigner'), $STR_STRIPLEADING + $STR_STRIPTRAILING) & @CRLF
 
 		If $output == '' Or StringInStr($output, 'java.lang.UnsupportedClassVersionError') Or StringInStr($output, 'Unsupported major.minor version') Then
 			$output = $strNeedJava & @CRLF & @CRLF & $output
@@ -2077,34 +2081,19 @@ Func _adb()
 	EndIf
 EndFunc   ;==>_adb
 
-Func _readAll($process, $error, $stdout = True)
-	ProgressSet(0, $error & '...')
-	$output = ''
-	$max = 32 * 1000
-	$timeout = TimerInit()
-	$timer = TimerInit()
-	$last = 0
-	While 1
-		$time = TimerDiff($timeout)
-		If $time > $max Then ExitLoop
-		If $stdout Then
-			$bin = StdoutRead($process, False, True)
-		Else
-			$bin = StderrRead($process, False, True)
-		EndIf
-		If @error Then ExitLoop
-		If StringLen($bin) > 0 Then
-			$timeout = TimerInit()
-			$output &= BinaryToString($bin, $SB_UTF8)
-		Else
-			$check = Round(TimerDiff($timer) / 500)
-			If $check <> $last Then
-				$last = $check
-				ProgressSet($time * 100 / $max, $error & '... ' & Round($time / 1000))
-			EndIf
-		EndIf
-	WEnd
-	ProgressSet(100, $error & '... OK')
+Func _readAll($process, $title, $stdout = True)
+	ProgressSet(0, $title & "...")
+	ProcessWaitClose($process, 600)
+	$output = ""
+	If $stdout Then
+		$bin = StdoutRead($process, False, True)
+	Else
+		$bin = StderrRead($process, False, True)
+	EndIf
+
+	$output &= BinaryToString($bin, $SB_UTF8)
+
+	ProgressSet(100, $title & '... OK')
 	Return $output
 EndFunc   ;==>_readAll
 
@@ -2286,7 +2275,7 @@ Func setToolsPath()
 		EndIf
 		
 		If $bAPKSignerFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\apksigner.bat") Then
-			$sAPKSignerPath = 'apksigner'
+			$sAPKSignerPath = 'apksigner.bat'
 			$bAPKSignerFound = True
 		EndIf
 		
