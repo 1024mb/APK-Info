@@ -95,7 +95,7 @@ ECHO.
 ECHO.
 ECHO Extracting magick...
 ECHO.
-.\tools\7z.exe e .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip -o.\tools convert.exe colors.xml -r -aoa -y
+.\tools\7z.exe e .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip -o.\tools magick.exe colors.xml -r -aoa -y
 DEL /F /Q .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip
 
 
