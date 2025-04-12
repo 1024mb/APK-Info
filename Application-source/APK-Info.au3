@@ -453,11 +453,6 @@ ProgressSet(100)
 
 ProgressOff()
 
-; The following lines are included in order to re-gain focus when the user focus other windows while the progress windows are shown, otherwise the main window will not gain focus until the window is manually minimized and maximized
-GUISetState(@SW_MINIMIZE, $hGUI)
-GUISetState(@SW_RESTORE, $hGUI)
-WinActivate($hGUI)
-
 Local $whGap = '            '
 
 While 1
