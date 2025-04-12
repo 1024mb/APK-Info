@@ -2346,7 +2346,7 @@ Func setToolsPath()
 	
 	If Not $bMagickFound Then
 		$sMagickPath = '"' & $toolsDir & 'magick.exe"'
-		If Not FileExists($toolsDir & 'magick.exe') Then
+		If Not FileExists($toolsDir & "magick.exe") Then
 			$sNotFoundTools &= "magick.exe"
 		EndIf
 	EndIf
