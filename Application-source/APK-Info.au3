@@ -1791,6 +1791,8 @@ Func _extractIcon()
 		If FileExists($sAPKSTempPath & '\icon.png') Then
 			$apk_IconPath = $sAPKSTempPath & '\icon.png'
 			$bIconNotInside = True
+		Else
+			Return
 		EndIf
 
 		RunWait($sMagickPath & ' "' & $apk_IconPath & '" -resize 1x1 txt:"' & $sAPKSTempPath & '\magick.txt"', "", @SW_HIDE)
@@ -1799,7 +1801,6 @@ Func _extractIcon()
 
 		$magickOutput = _StringExplode($magickOut, @CRLF)
 		$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
-
 	EndIf
 EndFunc   ;==>_extractIcon
 
