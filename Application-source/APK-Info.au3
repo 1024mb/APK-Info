@@ -176,7 +176,7 @@ $strAdb = 'ADB'
 
 $urlUpdate = 'https://github.com/1024mb/APK-Info/releases/latest'
 $playStoreUrl = "https://play.google.com/store/apps/details?hl=en&id="
-$apkPureUrl = "https://apkpure.net/apk-info/"
+$apkPureUrl = "https://apkpure.com/xxxxxxxx/"
 $strApkPure = "APKPure"
 
 readLocalization($sIniLocalization, $Language_code, $LangSection, $strLabel, $strVersion, $strBuild, $strPkg, $strScreens, $strDensities, $strPermissions, $strFeatures, $strFilename, $strNewFilename, $strPlayStore, $strRename, $strExit, $strRenameAPK, $strNewName, $strError, $strRenameFail, $strSelectAPK, $strCurDev, $strCurDevBuild, $strUnknown, $strABIs, $strSignature, $strIcon, $strLoading, $strTextures, $strHash, $strInstall, $strUninstall, $strLocales, $strClose, $strNoAdbDevices, $strMinMaxSDK, $strMaxSDK, $strTargetCompileSDK, $strCompileSDK, $strLanguage, $strSupport, $strDebuggable, $strLabelInLocales, $strNewVersionIsAvailable, $strNoNewVersionIsAvailable, $strMoreUpToDate, $strTextInformation, $strLoadSignature, $strStart, $strExceededTimeout, $strCheckUpdate, $strYes, $strNo, $strNotFound, $strNoUpdatesFound, $strNeedJava, $strErrorTitle, $strExtractAPKSError, $strGettingContentAPKSError, $strRenFileAlreadyExistsMsg, $strUknownValueMsg, $strUses, $strImplied, $strNotRequired, $strOthers, $URLPlayStore, $PlayStoreLanguage, $strVersionVaries, $strNoVersionFound, $strUpdateCheckingNotPossible, $strLoadingFile, $strNotFoundTools, $strVersionSepDifferTitle, $strVersionSepDifferMsg1, $strVersionSepDifferMsg2)
@@ -2196,7 +2196,7 @@ Func _checkUpdate()
 	$out = $out & @CRLF & $strApkPure & ':' & @CRLF
 	ProgressSet(50, '', $strApkPure)
 	$url2 = $apkPureUrl & $apk_PkgName
-	$foo = _Run($strApkPure, $sCurlPath & ' -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
+	$foo = _Run($strApkPure, $sCurlPath & ' -s -k --ssl-no-revoke -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/137.0" "' & $url2 & '"', $STDERR_CHILD + $STDOUT_CHILD + $STDERR_MERGED)
 	ProgressSet(70)
 	$output = _readAll($foo, $strApkPure)
 	ProgressSet(80)
