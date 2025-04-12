@@ -2345,9 +2345,9 @@ Func setToolsPath()
 	EndIf
 	
 	If Not $bMagickFound Then
-		$sMagickPath = '"' & $toolsDir & 'convert.exe"'
-		If Not FileExists($toolsDir & 'convert.exe') Then
-			$sNotFoundTools &= "magick.exe" & @CRLF & "convert.exe"
+		$sMagickPath = '"' & $toolsDir & 'magick.exe"'
+		If Not FileExists($toolsDir & 'magick.exe') Then
+			$sNotFoundTools &= "magick.exe"
 		EndIf
 	EndIf
 
