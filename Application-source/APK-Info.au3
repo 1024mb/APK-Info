@@ -73,6 +73,8 @@ Global $sAPKSTempPath = ''
 Global $bIconNotInside = False
 Global $bAPKIconBuilt = False
 
+Global $sColorRegexPattern = ".+#([^\s]{6})([^\s]{2})\s+.+"
+
 Global $sAaptPath, $sAapt2Path, $sSevenZipPath, $sMagickPath, $sADBPath, $sCurlPath, $sAPKSignerPath
 
 If FileExists($Inidir & "user.ini") Then
@@ -665,7 +667,7 @@ Func MY_WM_PAINT($hWnd, $Msg, $wParam, $lParam)
 		$defBkColor = BitOR($defBkColor, 0xFF000000)
 	EndIf
 	$color = $defBkColor
-	If $bkgColor <> 0 Then $color = "0x" & $bkgColor
+	If $bkgColor <> 0 Then $color = "0x99" & $bkgColor
 	$hBrush = _GDIPlus_BrushCreateSolid($color)
 	_GDIPlus_GraphicsFillRect($hGraphic, $pos[0], $pos[1], $pos[2], $pos[3], $hBrush)
 	_GDIPlus_BrushDispose($hBrush)
@@ -1760,7 +1762,7 @@ Func _extractIcon()
 				FileDelete($tempPath & '\magick.txt')
 			EndIf
 			$magickOutput = _StringExplode($magickOut, @CRLF)
-			$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
+			$bkgColor = StringRegExpReplace($magickOutput[1], $sColorRegexPattern, '$1')
 		Else
 			If $bIsAPKS Then
 				_RunWait('icons', $sSevenZipPath & ' e ' & '"' & $sAPKSTempPath & '\base.apk' & '" ' & $apk_IconPath & " -o" & '"' & $sAPKSTempPath & '\base' & '" -r -aoa -y')
@@ -1778,7 +1780,7 @@ Func _extractIcon()
 				FileDelete($tempPath & '\magick.txt')
 			EndIf
 			$magickOutput = _StringExplode($magickOut, @CRLF)
-			$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
+			$bkgColor = StringRegExpReplace($magickOutput[1], $sColorRegexPattern, '$1')
 		EndIf
 	EndIf
 
@@ -1795,7 +1797,7 @@ Func _extractIcon()
 		FileDelete($sAPKSTempPath & '\magick.txt')
 
 		$magickOutput = _StringExplode($magickOut, @CRLF)
-		$bkgColor = StringRegExpReplace($magickOutput[1], '.+#([^\s]+)\s.+', '$1')
+		$bkgColor = StringRegExpReplace($magickOutput[1], $sColorRegexPattern, "$1")
 	EndIf
 EndFunc   ;==>_extractIcon
 
