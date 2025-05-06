@@ -102,15 +102,15 @@ DEL /F /Q .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip
 ECHO:
 ECHO Downloading Android platform-tools
 ECHO:
-.\tools\curl.exe -o .\tools\tmp\platform-tools_r34.0.4-windows.zip https://dl.google.com/android/repository/platform-tools_r34.0.4-windows.zip
+.\tools\curl.exe -o .\tools\tmp\platform-tools-latest-windows.zip https://dl.google.com/android/repository/platform-tools-latest-windows.zip
 ECHO:
 ECHO Downloading Android build-tools
 ECHO:
 .\tools\curl.exe -o .\tools\tmp\build-tools_r34-windows.zip https://dl.google.com/android/repository/build-tools_r34-windows.zip
 ECHO:
 
-.\tools\7z.exe e .\tools\tmp\platform-tools_r34.0.4-windows.zip -o.\tools adb.exe AdbWinApi.dll AdbWinUsbApi.dll -r -aoa -y
-DEL /F /Q .\tools\tmp\platform-tools_r34.0.4-windows.zip
+.\tools\7z.exe e .\tools\tmp\platform-tools-latest-windows.zip -o.\tools adb.exe AdbWinApi.dll AdbWinUsbApi.dll -r -aoa -y
+DEL /F /Q .\tools\tmp\platform-tools-latest-windows.zip
 
 .\tools\7z.exe e .\tools\tmp\build-tools_r34-windows.zip -o.\tools android-14\aapt.exe android-14\aapt2.exe android-14\lib\apksigner.jar android-14\libwinpthread-1.dll -aoa -y
 DEL /F /Q .\tools\tmp\build-tools_r34-windows.zip
