@@ -82,7 +82,7 @@ If FileExists($Inidir & "user.ini") Then
 	MsgBox($MB_OK + $MB_TOPMOST, "Migration", "You will have to manually migrate your customized configuration from last_state.ini (previously named user.ini) to user_config.ini.")
 EndIf
 
-If FileExists($sIniOriginalAppConfig) And IniRead($sIniUserConfig, "Settings", "Migrated", "") == "" Then
+If FileExists($sIniOriginalAppConfig) And _IniRead($sIniUserConfig, "Settings", "Migrated", "") == "" Then
 	FileCopy($sIniOriginalAppConfig, $sIniUserConfig, $FC_OVERWRITE)
 	FileMove($sIniOriginalAppConfig, $sIniOriginalAppConfig & ".bak")
 
@@ -1822,7 +1822,7 @@ Func _translateSDKLevel($sdk, $withNumber = True)
 	If $sdk == "1000" Then
 		$name = $strCurDev & '|' & $strCurDevBuild
 	Else
-		$name = IniRead($sIniAppConfig, "AndroidName", "SDK-" & $sdk, '??|' & $strUnknown)
+		$name = _IniRead($sIniAppConfig, "AndroidName", "SDK-" & $sdk, '??|' & $strUnknown)
 	EndIf
 	$tmp = _StringExplode($name, '|')
 	$ret = $tmp[0]
@@ -2096,13 +2096,13 @@ Func _readAll($process, $title, $stdout = True)
 EndFunc   ;==>_readAll
 
 Func _readSettings($name, $default)
-	$ret = IniRead($sIniUserConfig, "Settings", $name, $default)
+	$ret = _IniRead($sIniUserConfig, "Settings", $name, $default)
 	Return $ret
 EndFunc   ;==>_readSettings
 
 Func _checkNewVersion()
 	If $CheckNewVersion <> '0' Then
-		$tag = _StringExplode(IniRead($sLastState, "State", 'LastVersion', ''), '|', 1)
+		$tag = _StringExplode(_IniRead($sLastState, "State", 'LastVersion', ''), '|', 1)
 		$now = 'd' & @MON & '-' & @MDAY ; If $CheckNewVersion == '1' Then
 
 		If $CheckNewVersion == '2' Then
@@ -2359,7 +2359,7 @@ Func readSettings(ByRef $ForcedGUILanguage, ByRef $OSLanguageCode, ByRef $Langua
 	$ForcedGUILanguage = _readSettings("ForcedGUILanguage", "auto")
 	$OSLanguageCode = @OSLang
 	If $ForcedGUILanguage == "auto" Then
-		$Language_code = IniRead($sIniAppConfig, "OSLanguage", @OSLang, "en")
+		$Language_code = _IniRead($sIniAppConfig, "OSLanguage", @OSLang, "en")
 	Else
 		$Language_code = $ForcedGUILanguage
 	EndIf
@@ -2399,91 +2399,100 @@ Func readSettings(ByRef $ForcedGUILanguage, ByRef $OSLanguageCode, ByRef $Langua
 EndFunc   ;==>readSettings
 
 Func readLocalization($sIniLocalization, ByRef $Language_code, ByRef $LangSection, ByRef $strLabel, ByRef $strVersion, ByRef $strBuild, ByRef $strPkg, ByRef $strScreens, ByRef $strDensities, ByRef $strPermissions, ByRef $strFeatures, ByRef $strFilename, ByRef $strNewFilename, ByRef $strPlayStore, ByRef $strRename, ByRef $strExit, ByRef $strRenameAPK, ByRef $strNewName, ByRef $strError, ByRef $strRenameFail, ByRef $strSelectAPK, ByRef $strCurDev, ByRef $strCurDevBuild, ByRef $strUnknown, ByRef $strABIs, ByRef $strSignature, ByRef $strIcon, ByRef $strLoading, ByRef $strTextures, ByRef $strHash, ByRef $strInstall, ByRef $strUninstall, ByRef $strLocales, ByRef $strClose, ByRef $strNoAdbDevices, ByRef $strMinMaxSDK, ByRef $strMaxSDK, ByRef $strTargetCompileSDK, ByRef $strCompileSDK, ByRef $strLanguage, ByRef $strSupport, ByRef $strDebuggable, ByRef $strLabelInLocales, ByRef $strNewVersionIsAvailable, ByRef $strNoNewVersionIsAvailable, ByRef $strMoreUpToDate, ByRef $strTextInformation, ByRef $strLoadSignature, ByRef $strStart, ByRef $strExceededTimeout, ByRef $strCheckUpdate, ByRef $strYes, ByRef $strNo, ByRef $strNotFound, ByRef $strNoUpdatesFound, ByRef $strNeedJava, ByRef $strErrorTitle, ByRef $strExtractAPKSError, ByRef $strGettingContentAPKSError, ByRef $strRenFileAlreadyExistsMsg, ByRef $strUknownValueMsg, ByRef $strUses, ByRef $strImplied, ByRef $strNotRequired, ByRef $strOthers, ByRef $URLPlayStore, ByRef $PlayStoreLanguage, ByRef $strVersionVaries, ByRef $strNoVersionFound, ByRef $strUpdateCheckingNotPossible, ByRef $strLoadingFile, ByRef $strNotFoundTools, ByRef $strVersionSepDifferTitle, ByRef $strVersionSepDifferMsg1, ByRef $strVersionSepDifferMsg2)
-	$strLabel = IniRead($sIniLocalization, $LangSection, "Application", "Application")
-	$strVersion = IniRead($sIniLocalization, $LangSection, "Version", "Version")
-	$strBuild = IniRead($sIniLocalization, $LangSection, "Build", "Build")
-	$strPkg = IniRead($sIniLocalization, $LangSection, "Package", "Package")
-	$strScreens = IniRead($sIniLocalization, $LangSection, "ScreenSizes", "Screen Sizes")
-	$strDensities = IniRead($sIniLocalization, $LangSection, "Densities", "Densities")
-	$strPermissions = IniRead($sIniLocalization, $LangSection, "Permissions", "Permissions")
-	$strFeatures = IniRead($sIniLocalization, $LangSection, "Features", "Features")
-	$strFilename = IniRead($sIniLocalization, $LangSection, "CurrentName", "Current Name")
-	$strNewFilename = IniRead($sIniLocalization, $LangSection, "NewName", "New Name")
-	$strPlayStore = IniRead($sIniLocalization, $LangSection, "PlayStore", "Play Store")
-	$strRename = IniRead($sIniLocalization, $LangSection, "RenameFile", "Rename File")
-	$strExit = IniRead($sIniLocalization, $LangSection, "Exit", "Exit")
-	$strRenameAPK = IniRead($sIniLocalization, $LangSection, "RenameAPKFile", "Rename APK File")
-	$strNewName = IniRead($sIniLocalization, $LangSection, "NewAPKFilename", "New APK Filename")
-	$strError = IniRead($sIniLocalization, $LangSection, "Error", "Error!")
-	$strRenameFail = IniRead($sIniLocalization, $LangSection, "RenameFail", "APK File could not be renamed.")
-	$strSelectAPK = IniRead($sIniLocalization, $LangSection, "SelectAPKFile", "Select APK file")
-	$strCurDev = IniRead($sIniLocalization, $LangSection, "CurDev", "Cur_Dev")
-	$strCurDevBuild = IniRead($sIniLocalization, $LangSection, "CurDevBuild", "Current Dev. Build")
-	$strUnknown = IniRead($sIniLocalization, $LangSection, "Unknown", "Unknown")
-	$strABIs = IniRead($sIniLocalization, $LangSection, "ABIs", "ABIs")
-	$strSignature = IniRead($sIniLocalization, $LangSection, "Signature", "Signature")
-	$strIcon = IniRead($sIniLocalization, $LangSection, "Icon", "Icon")
-	$strLoading = IniRead($sIniLocalization, $LangSection, "Loading", "Loading")
-	$strTextures = IniRead($sIniLocalization, $LangSection, "Textures", "Textures")
-	$strHash = IniRead($sIniLocalization, $LangSection, "Hash", "Hash")
-	$strInstall = IniRead($sIniLocalization, $LangSection, "Install", "Install")
-	$strUninstall = IniRead($sIniLocalization, $LangSection, "Uninstall", "Uninstall")
-	$strLocales = IniRead($sIniLocalization, $LangSection, "Locales", "Locales")
-	$strClose = IniRead($sIniLocalization, $LangSection, "Close", "Close")
-	$strNoAdbDevices = IniRead($sIniLocalization, $LangSection, "NoAdbDevicesFound", "No ADB devices found.")
-	$strMinMaxSDK = IniRead($sIniLocalization, $LangSection, "MinMaxSDK", "Min. / Max. SDK")
-	$strMaxSDK = IniRead($sIniLocalization, $LangSection, "MaxSDK", "Max. SDK")
-	$strTargetCompileSDK = IniRead($sIniLocalization, $LangSection, "TargetCompileSDK", "Target / Compile SDK")
-	$strCompileSDK = IniRead($sIniLocalization, $LangSection, "CompileSDK", "Compile SDK")
-	$strLanguage = IniRead($sIniLocalization, $LangSection, "Language", "Language")
-	$strSupport = IniRead($sIniLocalization, $LangSection, "Support", "Support")
-	$strDebuggable = IniRead($sIniLocalization, $LangSection, "Debuggable", "Debuggable")
-	$strLabelInLocales = IniRead($sIniLocalization, $LangSection, "LabelInLocales", "Application name in different locales")
-	$strNewVersionIsAvailable = IniRead($sIniLocalization, $LangSection, "NewVersionIsAvailable", "A new version is available")
-	$strNoNewVersionIsAvailable = IniRead($sIniLocalization, $LangSection, "NoNewVersionIsAvailable", "Up to date")
-	$strMoreUpToDate = IniRead($sIniLocalization, $LangSection, "MoreUpToDate", "Your version is more up to date")
-	$strTextInformation = IniRead($sIniLocalization, $LangSection, "TextInformation", "Text information")
-	$strLoadSignature = IniRead($sIniLocalization, $LangSection, "LoadSignature", "Load signature")
-	$strStart = IniRead($sIniLocalization, $LangSection, "Start", "Start")
-	$strExceededTimeout = IniRead($sIniLocalization, $LangSection, "ExceededTimeout", "Exceeded timeout response from the command")
-	$strCheckUpdate = IniRead($sIniLocalization, $LangSection, "CheckUpdate", "Check update")
-	$strYes = IniRead($sIniLocalization, $LangSection, "Yes", "Yes")
-	$strNo = IniRead($sIniLocalization, $LangSection, "No", "No")
-	$strNotFound = IniRead($sIniLocalization, $LangSection, "NotFound", "Not found")
-	$strNoUpdatesFound = IniRead($sIniLocalization, $LangSection, "NoUpdatesFound", "No updates found")
-	$strNeedJava = IniRead($sIniLocalization, $LangSection, "NeedJava", 'Need Java 1.8 or higher.')
-	$strErrorTitle = IniRead($sIniLocalization, $LangSection, "ErrorTitle", 'Error')
-	$strExtractAPKSError = IniRead($sIniLocalization, $LangSection, "ExtractAPKSError", 'There was an error extracting the APKS file')
-	$strGettingContentAPKSError = IniRead($sIniLocalization, $LangSection, "GettingContentAPKSError", 'There was an error getting the contents of the APKS file')
-	$strRenFileAlreadyExistsMsg = IniRead($sIniLocalization, $LangSection, "RenFileAlreadyExistsMsg", 'The output file already exists, please enter a new name')
-	$strUknownValueMsg = IniRead($sIniLocalization, $LangSection, "UknownValueMsg", 'The specified value for the following option is invalid:')
+	$strLabel = _IniRead($sIniLocalization, $LangSection, "Application", "Application")
+	$strVersion = _IniRead($sIniLocalization, $LangSection, "Version", "Version")
+	$strBuild = _IniRead($sIniLocalization, $LangSection, "Build", "Build")
+	$strPkg = _IniRead($sIniLocalization, $LangSection, "Package", "Package")
+	$strScreens = _IniRead($sIniLocalization, $LangSection, "ScreenSizes", "Screen Sizes")
+	$strDensities = _IniRead($sIniLocalization, $LangSection, "Densities", "Densities")
+	$strPermissions = _IniRead($sIniLocalization, $LangSection, "Permissions", "Permissions")
+	$strFeatures = _IniRead($sIniLocalization, $LangSection, "Features", "Features")
+	$strFilename = _IniRead($sIniLocalization, $LangSection, "CurrentName", "Current Name")
+	$strNewFilename = _IniRead($sIniLocalization, $LangSection, "NewName", "New Name")
+	$strPlayStore = _IniRead($sIniLocalization, $LangSection, "PlayStore", "Play Store")
+	$strRename = _IniRead($sIniLocalization, $LangSection, "RenameFile", "Rename File")
+	$strExit = _IniRead($sIniLocalization, $LangSection, "Exit", "Exit")
+	$strRenameAPK = _IniRead($sIniLocalization, $LangSection, "RenameAPKFile", "Rename APK File")
+	$strNewName = _IniRead($sIniLocalization, $LangSection, "NewAPKFilename", "New APK Filename")
+	$strError = _IniRead($sIniLocalization, $LangSection, "Error", "Error!")
+	$strRenameFail = _IniRead($sIniLocalization, $LangSection, "RenameFail", "APK File could not be renamed.")
+	$strSelectAPK = _IniRead($sIniLocalization, $LangSection, "SelectAPKFile", "Select APK file")
+	$strCurDev = _IniRead($sIniLocalization, $LangSection, "CurDev", "Cur_Dev")
+	$strCurDevBuild = _IniRead($sIniLocalization, $LangSection, "CurDevBuild", "Current Dev. Build")
+	$strUnknown = _IniRead($sIniLocalization, $LangSection, "Unknown", "Unknown")
+	$strABIs = _IniRead($sIniLocalization, $LangSection, "ABIs", "ABIs")
+	$strSignature = _IniRead($sIniLocalization, $LangSection, "Signature", "Signature")
+	$strIcon = _IniRead($sIniLocalization, $LangSection, "Icon", "Icon")
+	$strLoading = _IniRead($sIniLocalization, $LangSection, "Loading", "Loading")
+	$strTextures = _IniRead($sIniLocalization, $LangSection, "Textures", "Textures")
+	$strHash = _IniRead($sIniLocalization, $LangSection, "Hash", "Hash")
+	$strInstall = _IniRead($sIniLocalization, $LangSection, "Install", "Install")
+	$strUninstall = _IniRead($sIniLocalization, $LangSection, "Uninstall", "Uninstall")
+	$strLocales = _IniRead($sIniLocalization, $LangSection, "Locales", "Locales")
+	$strClose = _IniRead($sIniLocalization, $LangSection, "Close", "Close")
+	$strNoAdbDevices = _IniRead($sIniLocalization, $LangSection, "NoAdbDevicesFound", "No ADB devices found.")
+	$strMinMaxSDK = _IniRead($sIniLocalization, $LangSection, "MinMaxSDK", "Min. / Max. SDK")
+	$strMaxSDK = _IniRead($sIniLocalization, $LangSection, "MaxSDK", "Max. SDK")
+	$strTargetCompileSDK = _IniRead($sIniLocalization, $LangSection, "TargetCompileSDK", "Target / Compile SDK")
+	$strCompileSDK = _IniRead($sIniLocalization, $LangSection, "CompileSDK", "Compile SDK")
+	$strLanguage = _IniRead($sIniLocalization, $LangSection, "Language", "Language")
+	$strSupport = _IniRead($sIniLocalization, $LangSection, "Support", "Support")
+	$strDebuggable = _IniRead($sIniLocalization, $LangSection, "Debuggable", "Debuggable")
+	$strLabelInLocales = _IniRead($sIniLocalization, $LangSection, "LabelInLocales", "Application name in different locales")
+	$strNewVersionIsAvailable = _IniRead($sIniLocalization, $LangSection, "NewVersionIsAvailable", "A new version is available")
+	$strNoNewVersionIsAvailable = _IniRead($sIniLocalization, $LangSection, "NoNewVersionIsAvailable", "Up to date")
+	$strMoreUpToDate = _IniRead($sIniLocalization, $LangSection, "MoreUpToDate", "Your version is more up to date")
+	$strTextInformation = _IniRead($sIniLocalization, $LangSection, "TextInformation", "Text information")
+	$strLoadSignature = _IniRead($sIniLocalization, $LangSection, "LoadSignature", "Load signature")
+	$strStart = _IniRead($sIniLocalization, $LangSection, "Start", "Start")
+	$strExceededTimeout = _IniRead($sIniLocalization, $LangSection, "ExceededTimeout", "Exceeded timeout response from the command")
+	$strCheckUpdate = _IniRead($sIniLocalization, $LangSection, "CheckUpdate", "Check update")
+	$strYes = _IniRead($sIniLocalization, $LangSection, "Yes", "Yes")
+	$strNo = _IniRead($sIniLocalization, $LangSection, "No", "No")
+	$strNotFound = _IniRead($sIniLocalization, $LangSection, "NotFound", "Not found")
+	$strNoUpdatesFound = _IniRead($sIniLocalization, $LangSection, "NoUpdatesFound", "No updates found")
+	$strNeedJava = _IniRead($sIniLocalization, $LangSection, "NeedJava", 'Need Java 1.8 or higher.')
+	$strErrorTitle = _IniRead($sIniLocalization, $LangSection, "ErrorTitle", 'Error')
+	$strExtractAPKSError = _IniRead($sIniLocalization, $LangSection, "ExtractAPKSError", 'There was an error extracting the APKS file')
+	$strGettingContentAPKSError = _IniRead($sIniLocalization, $LangSection, "GettingContentAPKSError", 'There was an error getting the contents of the APKS file')
+	$strRenFileAlreadyExistsMsg = _IniRead($sIniLocalization, $LangSection, "RenFileAlreadyExistsMsg", 'The output file already exists, please enter a new name')
+	$strUknownValueMsg = _IniRead($sIniLocalization, $LangSection, "UknownValueMsg", 'The specified value for the following option is invalid:')
 
-	$strUses = IniRead($sIniLocalization, $LangSection, "Uses", "uses")
-	$strImplied = IniRead($sIniLocalization, $LangSection, "Implied", "implied")
-	$strNotRequired = IniRead($sIniLocalization, $LangSection, "NotRequired", "not required")
-	$strOthers = IniRead($sIniLocalization, $LangSection, "Others", "others")
+	$strUses = _IniRead($sIniLocalization, $LangSection, "Uses", "uses")
+	$strImplied = _IniRead($sIniLocalization, $LangSection, "Implied", "implied")
+	$strNotRequired = _IniRead($sIniLocalization, $LangSection, "NotRequired", "not required")
+	$strOthers = _IniRead($sIniLocalization, $LangSection, "Others", "others")
 
-	$URLPlayStore = IniRead($sIniLocalization, $LangSection, "URLPlaystore", "https://play.google.com/store/apps/details?id=")
+	$URLPlayStore = _IniRead($sIniLocalization, $LangSection, "URLPlaystore", "https://play.google.com/store/apps/details?id=")
 
-	$PlayStoreLanguage = IniRead($sIniLocalization, $LangSection, "PlayStoreLanguage", $Language_code)
+	$PlayStoreLanguage = _IniRead($sIniLocalization, $LangSection, "PlayStoreLanguage", $Language_code)
 
-	$strVersionVaries = IniRead($sIniLocalization, $LangSection, "VersionVaries", "Version varies with device.")
-	$strNoVersionFound = IniRead($sIniLocalization, $LangSection, "NoVersionFound", "Version information not found.")
-	$strUpdateCheckingNotPossible = IniRead($sIniLocalization, $LangSection, "UpdateCheckingNotPossible", "New version checking is not possible.")
-	$strLoadingFile = IniRead($sIniLocalization, $LangSection, "LoadingFile", "Loading file...")
-	$strNotFoundTools = IniRead($sIniLocalization, $LangSection, "NotFoundTools", "These tools weren't found either in your Path environment or 'tools' directory:")
-	$strVersionSepDifferTitle = IniRead($sIniLocalization, $LangSection, "VersionSepDifferTitle", "Try appending build number?")
-	$strVersionSepDifferMsg1 = IniRead($sIniLocalization, $LangSection, "VersionSepDifferMsg1", "The version found online has more delimiters (.) than the APK version.")
-	$strVersionSepDifferMsg2 = IniRead($sIniLocalization, $LangSection, "VersionSepDifferMsg2", "Append the APK build number to its version?")
+	$strVersionVaries = _IniRead($sIniLocalization, $LangSection, "VersionVaries", "Version varies with device.")
+	$strNoVersionFound = _IniRead($sIniLocalization, $LangSection, "NoVersionFound", "Version information not found.")
+	$strUpdateCheckingNotPossible = _IniRead($sIniLocalization, $LangSection, "UpdateCheckingNotPossible", "New version checking is not possible.")
+	$strLoadingFile = _IniRead($sIniLocalization, $LangSection, "LoadingFile", "Loading file...")
+	$strNotFoundTools = _IniRead($sIniLocalization, $LangSection, "NotFoundTools", "These tools weren't found either in your Path environment or 'tools' directory:")
+	$strVersionSepDifferTitle = _IniRead($sIniLocalization, $LangSection, "VersionSepDifferTitle", "Try appending build number?")
+	$strVersionSepDifferMsg1 = _IniRead($sIniLocalization, $LangSection, "VersionSepDifferMsg1", "The version found online has more delimiters (.) than the APK version.")
+	$strVersionSepDifferMsg2 = _IniRead($sIniLocalization, $LangSection, "VersionSepDifferMsg2", "Append the APK build number to its version?")
 EndFunc   ;==>readLocalization
 
-Func readLastState(ByRef $LastTop, ByRef $LastLeft, ByRef $LastWidth, ByRef $LastHeight)
-	$LastFolder = IniRead($sLastState, "State", "LastFolder", @WorkingDir)
+Func _IniRead($filename, $section, $key, $default)
+	$sLocalizedString = StringStripWS(IniRead($filename, $section, $key, ""), $STR_STRIPLEADING + $STR_STRIPTRAILING)
+	If ($sLocalizedString == "") Then
+		return $default
+	Else
+		return $sLocalizedString
+	EndIf
+EndFunc   ;==>_IniRead
 
-	$LastTop = IniRead($sLastState, "State", "LastTop", 0)
-	$LastLeft = IniRead($sLastState, "State", "LastLeft", 0)
-	$LastWidth = IniRead($sLastState, "State", "LastWidth", 0)
-	$LastHeight = IniRead($sLastState, "State", "LastHeight", 0)
+Func readLastState(ByRef $LastTop, ByRef $LastLeft, ByRef $LastWidth, ByRef $LastHeight)
+	$LastFolder = _IniRead($sLastState, "State", "LastFolder", @WorkingDir)
+
+	$LastTop = _IniRead($sLastState, "State", "LastTop", 0)
+	$LastLeft = _IniRead($sLastState, "State", "LastLeft", 0)
+	$LastWidth = _IniRead($sLastState, "State", "LastWidth", 0)
+	$LastHeight = _IniRead($sLastState, "State", "LastHeight", 0)
 EndFunc   ;==>readLastState
 
 Func compareVersions($ver)
