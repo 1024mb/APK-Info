@@ -2480,9 +2480,9 @@ EndFunc   ;==>readLocalization
 Func _IniRead($filename, $section, $key, $default)
 	$sLocalizedString = StringStripWS(IniRead($filename, $section, $key, ""), $STR_STRIPLEADING + $STR_STRIPTRAILING)
 	If ($sLocalizedString == "") Then
-		return $default
+		Return $default
 	Else
-		return $sLocalizedString
+		Return $sLocalizedString
 	EndIf
 EndFunc   ;==>_IniRead
 
