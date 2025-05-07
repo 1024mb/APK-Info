@@ -1,3 +1,17 @@
+*** 1.42
+- Fixed missing non-localized strings
+- Updated batch script to automatically download latest Android platform tools
+
+
+*** 1.41
+- Updated Russian translation
+- Deprecate convert.exe usage in favor or magick.exe
+- Fixed Apkpure version check
+- Fixed extraction of app icon on APKS files
+- Removed focus workaround
+- Improved icon background color detection
+
+
 *** 1.40
 - Fixed signature verification
 - Simplified command output capturing
