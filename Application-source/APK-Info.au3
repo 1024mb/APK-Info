@@ -1363,13 +1363,13 @@ Func _parseLines($lines)
 
 		Switch $key
 			Case 'application-label'
-				If $apk_Label == '' Then $apk_Label = _StringBetween2($value, "'", "'")
+				If $apk_Label == '' Then $apk_Label = _ExtractLabel($value)
 
 			Case 'application-label-' & $Language_code
-				If $LocalizeName == '1' Then $apk_Label = _StringBetween2($value, "'", "'")
+				If $LocalizeName == '1' Then $apk_Label = _ExtractLabel($value)
 
 			Case 'application', 'launchable-activity', 'leanback-launchable-activity'
-				If $apk_Label == '' Then $apk_Label = _StringBetween2($value, "label='", "'")
+				If $apk_Label == '' Then $apk_Label = _ExtractLabelAlt($value)
 				$icon = _StringBetween2($value, "icon='", "'")
 				If $icon <> '' Then
 					If $icons <> '' Then $icons &= @CRLF
@@ -1877,6 +1877,22 @@ Func _StringBetween2($text, $from, $to)
 	If $var <> 0 Then Return $var[0]
 	Return ''
 EndFunc   ;==>_StringBetween2
+
+Func _ExtractLabel($sText)
+	$aLabel = StringRegExp($sText, "^'(.*?)'$", 1)
+	If $aLabel <> 0 Then Return $aLabel[0]
+	return $sText
+EndFunc   ;==>_ExtractLabel
+
+Func _ExtractLabelAlt($sText)
+	$aLabel = StringRegExp($sText, "^label='(.*?)'$", 1)
+	If $aLabel <> 0 Then Return $aLabel[0]
+
+	$aLabel = StringRegExp($sText, "^label=(.*)$", 1)
+	If $aLabel <> 0 Then Return $aLabel[0]
+
+	return $sText
+EndFunc   ;==>_ExtractLabelAlt
 
 Func _showText($title, $message, $text)
 	$pos = WinGetPos($hGUI)
