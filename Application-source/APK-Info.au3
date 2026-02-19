@@ -135,7 +135,7 @@ Else
 		$tmp_Filename = $aCmdLine[2]
 	EndIf
 EndIf
-	
+
 
 Local $tmp = _StringExplode($tmp_Filename, ':', 2)
 If $tmp[0] == 'debug' Then
@@ -459,7 +459,7 @@ Local $whGap = '            '
 
 While 1
 	$nMsg = GUIGetMsg()
-	
+
 	Switch $nMsg
 		Case $gSelAll
 			_SelAll()
@@ -992,7 +992,7 @@ Func _OpenNewFile($apk, $progress = True, $bProgramStart = False)
 	ElseIf $keepWords <> 0 Then
 		showErrorMsg("KeepWords")
 	EndIf
-	
+
 	If $ShowHash <> "" Then
 		$hash = _ReplacePlaceholders($ShowHash)
 	EndIf
@@ -1630,6 +1630,8 @@ Func _searchPng($aIcons)
 	$foo = ''
 	If Not $searchPngCache Then
 		If $bIsAPKS Then
+			; TODO: We can list all apk files using "\*.apk" because some APKS files have the app's icon on other APK files
+			;  but we would have to refactor the other functions because they also use only base.apk to extract the icon from
 			$foo = _Run('list', $sSevenZipPath & ' l ' & '"' & $sAPKSTempPath & '\base.apk' & '"', $STDERR_CHILD + $STDOUT_CHILD)
 		Else
 			$foo = _Run('list', $sSevenZipPath & ' l ' & '"' & $fullPathAPK & '"', $STDERR_CHILD + $STDOUT_CHILD)
@@ -2287,27 +2289,27 @@ Func setToolsPath()
 			$sCurlPath = 'curl'
 			$bCURLFound = True
 		EndIf
-		
+
 		If $bAPKSignerFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\apksigner.bat") Then
 			$sAPKSignerPath = 'apksigner.bat'
 			$bAPKSignerFound = True
 		EndIf
-		
+
 		If $bSevenZipFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\7z.exe") Then
 			$sSevenZipPath = '7z'
 			$bSevenZipFound = True
 		EndIf
-		
+
 		If $bAaptFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\aapt.exe") Then
 			$sAaptPath = 'aapt'
 			$bAaptFound = True
 		EndIf
-		
+
 		If $bAapt2Found == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\aapt2.exe") Then
 			$sAapt2Path = 'aapt2'
 			$bAapt2Found = True
 		EndIf
-		
+
 		If $bMagickFound == False And FileExists(StringStripWS($sPathItem, $STR_STRIPLEADING + $STR_STRIPTRAILING) & "\magick.exe") Then
 			$sMagickPath = 'magick'
 			$bMagickFound = True
@@ -2329,35 +2331,35 @@ Func setToolsPath()
 			$sNotFoundTools &= "curl.exe" & @CRLF
 		EndIf
 	EndIf
-	
+
 	If Not $bAPKSignerFound Then
 		$sAPKSignerPath = '"' & $JavaPath & 'java" -jar "' & $toolsDir & 'apksigner.jar"'
 		If Not FileExists($toolsDir & 'apksigner.jar') Then
 			$sNotFoundTools &= "apksigner.bat" & @CRLF & "apksigner.jar" & @CRLF
 		EndIf
 	EndIf
-	
+
 	If Not $bSevenZipFound Then
 		$sSevenZipPath = '"' & $toolsDir & '7z.exe"'
 		If Not FileExists($toolsDir & '7z.exe') Then
 			$sNotFoundTools &= "7z.exe" & @CRLF
 		EndIf
 	EndIf
-	
+
 	If Not $bAaptFound Then
 		$sAaptPath = '"' & $toolsDir & 'aapt.exe"'
 		If Not FileExists($toolsDir & 'aapt.exe') Then
 			$sNotFoundTools &= "aapt.exe" & @CRLF
 		EndIf
 	EndIf
-	
+
 	If Not $bAapt2Found Then
 		$sAapt2Path = '"' & $toolsDir & 'aapt2.exe"'
 		If Not FileExists($toolsDir & 'aapt2.exe') Then
 			$sNotFoundTools &= "aapt2.exe" & @CRLF
 		EndIf
 	EndIf
-	
+
 	If Not $bMagickFound Then
 		$sMagickPath = '"' & $toolsDir & 'magick.exe"'
 		If Not FileExists($toolsDir & "magick.exe") Then
@@ -2539,15 +2541,15 @@ Func compareVersions($ver)
 
 	; If a letter is found in the last character of the version number then convert it to a number by alphabet order (A=01, B=02, etc) and add to array
 	; This will only support and take into account cases where only one letter is used and is located at the end i.e. 1.2.3a, all other cases are ignored.
-	
 
-	If StringRegExp($asOnlineVersionAlt[UBound($asOnlineVersionAlt) - 1], "[A-Za-z]$") == 1 Then 
+
+	If StringRegExp($asOnlineVersionAlt[UBound($asOnlineVersionAlt) - 1], "[A-Za-z]$") == 1 Then
 		Local $sLetterValue = ""
 		$sLetterValue = convertLetterToNumber($vElement)
 		_ArrayAdd($asOnlineVersion, $sLetterValue)
 	EndIf
 
-	If StringRegExp($asAPKVersionAlt[UBound($asAPKVersionAlt) - 1], "[A-Za-z]$") == 1 Then 
+	If StringRegExp($asAPKVersionAlt[UBound($asAPKVersionAlt) - 1], "[A-Za-z]$") == 1 Then
 		Local $sLetterValue = ""
 		$sLetterValue = convertLetterToNumber($vElement)
 		_ArrayAdd($asAPKVersion, $sLetterValue)
@@ -2610,7 +2612,7 @@ Func compareVersions($ver)
 		EndIf
 		$iArrayNum += 1
 	Next
-	
+
 	$iArrayNum = 0
 
 	; Continue
