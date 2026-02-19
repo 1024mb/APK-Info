@@ -1,3 +1,8 @@
+*** 1.43
+- Fixed label not extracted correctly when it contains single quotes
+- Fixed ImageMagick now using 7-zip files
+
+
 *** 1.42
 - Fixed missing non-localized strings
 - Updated batch script to automatically download latest Android platform tools
