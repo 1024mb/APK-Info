@@ -15,7 +15,7 @@ ECHO By continuing you agree with said licenses.
 ECHO:
 CHOICE /C YN /M "Enter Y to confirm or N to exit."
 IF %ERRORLEVEL% NEQ 1 (
-	EXIT
+    EXIT
 )
 CLS
 ECHO:
@@ -24,19 +24,19 @@ IF NOT EXIST .\tools MKDIR tools
 IF NOT EXIST .\tools\tmp MKDIR tools\tmp
 
 IF DEFINED ProgramFiles(x86) (
-	SET "CURL_BIT=win64"
-	SET "MAGICK_BIT=x64"
-	SET "SEVENZIP_BIT=x64\"
+    SET "CURL_BIT=win64"
+    SET "MAGICK_BIT=x64"
+    SET "SEVENZIP_BIT=x64\"
 ) ELSE (
     SET "CURL_BIT=win32"
-	SET "MAGICK_BIT=x86"
-	SET "SEVENZIP_BIT= "
+    SET "MAGICK_BIT=x86"
+    SET "SEVENZIP_BIT= "
 )
 
 ECHO:
 ECHO Getting latest 7-zip version
 ECHO:
-powershell -Command "Invoke-WebRequest https://api.github.com/repos/ip7z/7zip/tags -OutFile .\tools\tmp\7zip-tags.json" 
+powershell -Command "Invoke-WebRequest https://api.github.com/repos/ip7z/7zip/tags -OutFile .\tools\tmp\7zip-tags.json"
 powershell -Command "$json=Get-Content -Raw -Path '.\tools\tmp\7zip-tags.json' | Out-String | ConvertFrom-Json; foreach ($line in $json) { $line.name > .\tools\tmp\7zip-latest.txt; return }"
 
 powershell -Command "$content = (gc .\tools\tmp\7zip-latest.txt).Trim(); [System.IO.File]::WriteAllText('.\tools\tmp\7zip-latest.txt', $content)"
@@ -78,7 +78,7 @@ DEL /F /Q .\tools\tmp\curl-%CURL_BIT%-mingw.zip
 ECHO:
 ECHO Getting latest magick version
 ECHO:
-powershell -Command "Invoke-WebRequest https://api.github.com/repos/ImageMagick/ImageMagick/tags -OutFile .\tools\tmp\magick-tags.json" 
+powershell -Command "Invoke-WebRequest https://api.github.com/repos/ImageMagick/ImageMagick/tags -OutFile .\tools\tmp\magick-tags.json"
 powershell -Command "$json=Get-Content -Raw -Path '.\tools\tmp\magick-tags.json' | Out-String | ConvertFrom-Json; foreach ($line in $json) { $line.name > .\tools\tmp\magick-latest.txt; return }"
 
 powershell -Command "$content = (gc .\tools\tmp\magick-latest.txt).Trim(); [System.IO.File]::WriteAllText('.\tools\tmp\magick-latest.txt', $content)"
@@ -90,13 +90,13 @@ DEL /F /Q .\tools\tmp\magick-latest.txt
 ECHO:
 ECHO Downloading magick
 ECHO:
-.\tools\curl.exe -L -o .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip https://imagemagick.org/archive/binaries/ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip
+.\tools\curl.exe -L -o .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.7z https://imagemagick.org/archive/binaries/ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.7z
 
 ECHO:
 ECHO Extracting magick...
 ECHO:
-.\tools\7z.exe e .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip -o.\tools magick.exe colors.xml -r -aoa -y
-DEL /F /Q .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.zip
+.\tools\7z.exe e .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.7z -o.\tools magick.exe colors.xml -r -aoa -y
+DEL /F /Q .\tools\tmp\ImageMagick-%MAGICK_VERSION%-portable-Q16-%MAGICK_BIT%.7z
 
 
 ECHO:
