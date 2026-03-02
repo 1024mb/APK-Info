@@ -1883,17 +1883,13 @@ EndFunc   ;==>_StringBetween2
 Func _ExtractLabel($sText)
 	$aLabel = StringRegExp($sText, "^'(.*?)'$", 1)
 	If $aLabel <> 0 Then Return $aLabel[0]
-	return $sText
+	return ''
 EndFunc   ;==>_ExtractLabel
 
 Func _ExtractLabelAlt($sText)
-	$aLabel = StringRegExp($sText, "^label='(.*?)'$", 1)
+	$aLabel = StringRegExp($sText, "(?:^|\s)label='(.*?)'(?:$|\s.+)", 1)
 	If $aLabel <> 0 Then Return $aLabel[0]
-
-	$aLabel = StringRegExp($sText, "^label=(.*)$", 1)
-	If $aLabel <> 0 Then Return $aLabel[0]
-
-	return $sText
+	return ''
 EndFunc   ;==>_ExtractLabelAlt
 
 Func _showText($title, $message, $text)
